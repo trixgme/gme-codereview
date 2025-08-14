@@ -4,6 +4,8 @@ const helmet = require('helmet');
 require('dotenv').config();
 
 const webhookRoutes = require('./routes/webhook');
+const logsRoutes = require('./routes/logs');
+const logger = require('./utils/logger');
 
 const app = express();
 
@@ -15,6 +17,37 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const startTime = Date.now();
+  
+  // Log incoming request
+  logger.info(`Incoming ${req.method} ${req.path}`, {
+    method: req.method,
+    path: req.path,
+    query: req.query,
+    headers: {
+      'x-event-key': req.headers['x-event-key'],
+      'x-hook-uuid': req.headers['x-hook-uuid'],
+      'user-agent': req.headers['user-agent']
+    },
+    ip: req.ip
+  });
+  
+  // Log response when finished
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+    logger.info(`Response ${req.method} ${req.path}`, {
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      duration: `${duration}ms`
+    });
+  });
+  
+  next();
+});
 
 app.get('/health', (req, res) => {
   res.status(200).json({ 
@@ -31,12 +64,15 @@ app.get('/', (req, res) => {
     description: 'Automated code review system using OpenAI GPT-4',
     endpoints: {
       webhook: '/webhook/bitbucket',
-      health: '/health'
+      health: '/health',
+      logs: '/logs',
+      logStats: '/logs/stats'
     }
   });
 });
 
 app.use('/webhook', webhookRoutes);
+app.use('/logs', logsRoutes);
 
 app.use((err, req, res, next) => {
   console.error('Error:', err);
