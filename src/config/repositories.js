@@ -4,7 +4,6 @@ const repositoryConfigs = {
   default: {
     enableReview: true,
     reviewModel: 'gpt-5',
-    maxTokens: 1500,
     temperature: 0.3,
     reviewTypes: ['bug', 'security', 'performance', 'quality'],
     autoApprove: false

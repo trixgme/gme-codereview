@@ -48,8 +48,7 @@ Please review this code change.`;
           { role: 'system', content: this.systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3,
-        max_tokens: 1500
+        temperature: 0.3
       });
 
       return response.choices[0].message.content;
@@ -104,8 +103,7 @@ Number of files changed: ${files.length}`;
           { role: 'system', content: 'You are a senior code reviewer providing a PR summary.' },
           { role: 'user', content: summaryPrompt }
         ],
-        temperature: 0.3,
-        max_tokens: 800
+        temperature: 0.3
       });
 
       return {

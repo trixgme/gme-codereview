@@ -302,3 +302,24 @@
     "duration": "641ms"
   }
 }
+{
+  "timestamp": "2025-08-14T07:18:12.956Z",
+  "level": "INFO",
+  "message": "🚀 Code Review Bot is running on port 3002"
+}
+{
+  "timestamp": "2025-08-14T07:18:12.957Z",
+  "level": "INFO",
+  "message": "Environment: production"
+}
+{
+  "timestamp": "2025-08-14T07:18:12.957Z",
+  "level": "INFO",
+  "message": "Configuration Status",
+  "data": {
+    "OpenAI API": true,
+    "Bitbucket Workspace": true,
+    "Bitbucket Auth": true,
+    "Webhook Secret": true
+  }
+}
