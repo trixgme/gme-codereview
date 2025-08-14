@@ -46,29 +46,188 @@ const repositoryConfigs = {
       skipPaths: ['logs/', 'test/', 'node_modules/']
     },
     
-    'gmeIos': {
+    // iOS App
+    'gmeios': {
       enableReview: true,
       reviewTypes: ['bug', 'memory', 'performance', 'ui/ux', 'battery'],
       focusAreas: ['메모리 관리', 'UI 반응성', 'Swift best practices', 'iOS 가이드라인'],
       skipPaths: ['Pods/', 'build/', 'DerivedData/', '.xcworkspace/', '*.xcuserstate']
     },
     
-    'mobile-app': {
+    // Mobile Apps
+    'mobile': {
       enableReview: true,
-      reviewTypes: ['bug', 'performance', 'memory', 'ui'],
-      focusAreas: ['Memory leaks', 'Battery usage', 'Network optimization'],
-      skipPaths: ['assets/', 'ios/Pods/']
+      reviewTypes: ['bug', 'performance', 'memory', 'ui/ux'],
+      focusAreas: ['Cross-platform compatibility', 'Responsive design', 'Mobile optimization'],
+      skipPaths: ['assets/', 'node_modules/', 'build/']
     },
     
-    'documentation': {
-      enableReview: false, // Skip review for documentation repos
+    'gmeandroid': {
+      enableReview: true,
+      reviewTypes: ['bug', 'memory', 'performance', 'ui/ux', 'battery'],
+      focusAreas: ['메모리 누수', 'ANR 방지', 'Kotlin best practices', 'Material Design'],
+      skipPaths: ['build/', 'gradle/', '.gradle/', '*.apk']
     },
     
-    'config-repo': {
+    // Core Services
+    'core': {
       enableReview: true,
-      reviewTypes: ['security', 'configuration'],
-      focusAreas: ['Credentials', 'Environment variables', 'Security settings'],
-      requireApproval: true
+      reviewTypes: ['bug', 'security', 'performance', 'architecture'],
+      focusAreas: ['Core business logic', 'Data integrity', 'System stability', 'API contracts'],
+      skipPaths: ['test/', 'docs/']
+    },
+    
+    'database': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'performance', 'data-integrity'],
+      focusAreas: ['SQL injection', 'Query optimization', 'Transaction management', 'Data consistency'],
+      skipPaths: ['migrations/', 'seeds/', 'backups/']
+    },
+    
+    'online-service': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'performance', 'api'],
+      focusAreas: ['Service availability', 'API response time', 'Error handling', 'Rate limiting'],
+      skipPaths: ['logs/', 'temp/']
+    },
+    
+    // Banking Partners
+    'alifbank_v2': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'compliance', 'api'],
+      focusAreas: ['Banking regulations', 'Transaction security', 'API integration', 'Error handling'],
+      skipPaths: ['test/', 'docs/']
+    },
+    
+    'sacombank': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'compliance', 'api'],
+      focusAreas: ['Banking security', 'Transaction integrity', 'API compatibility', 'Compliance'],
+      skipPaths: ['test/', 'docs/']
+    },
+    
+    'kbank-service': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'performance', 'api'],
+      focusAreas: ['Service reliability', 'API security', 'Transaction processing', 'Error recovery'],
+      skipPaths: ['logs/', 'temp/']
+    },
+    
+    'bracbank': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'compliance', 'api'],
+      focusAreas: ['Banking compliance', 'Security protocols', 'API standards', 'Data privacy'],
+      skipPaths: ['test/', 'docs/']
+    },
+    
+    'kbank': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'compliance', 'api'],
+      focusAreas: ['Banking integration', 'Security measures', 'Transaction handling', 'API reliability'],
+      skipPaths: ['test/', 'docs/']
+    },
+    
+    // GME Services
+    'partner_portal_upgrade': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'ui/ux', 'performance'],
+      focusAreas: ['Partner authentication', 'Portal security', 'User experience', 'Performance'],
+      skipPaths: ['node_modules/', 'dist/', 'build/']
+    },
+    
+    'gmehom-finance': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'compliance', 'calculation'],
+      focusAreas: ['Financial calculations', 'Compliance rules', 'Transaction accuracy', 'Audit trail'],
+      skipPaths: ['reports/', 'temp/']
+    },
+    
+    'payform_outbound': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'api', 'validation'],
+      focusAreas: ['Payment validation', 'Outbound security', 'API contracts', 'Error handling'],
+      skipPaths: ['logs/', 'temp/']
+    },
+    
+    'gmehom-auth': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'authentication', 'authorization'],
+      focusAreas: ['Authentication security', 'Token management', 'Session handling', 'Permission checks'],
+      skipPaths: ['test/', 'docs/']
+    },
+    
+    // Payment Services
+    'sendmn-billpayment': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'api', 'payment'],
+      focusAreas: ['Payment processing', 'Bill validation', 'API integration', 'Transaction integrity'],
+      skipPaths: ['logs/', 'temp/']
+    },
+    
+    'schedulepaymentsvc': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'scheduling', 'payment'],
+      focusAreas: ['Payment scheduling', 'Transaction security', 'Schedule reliability', 'Error handling'],
+      skipPaths: ['logs/', 'temp/']
+    },
+    
+    'paysend_outbound': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'payment', 'api'],
+      focusAreas: ['Payment security', 'Outbound validation', 'API reliability', 'Transaction tracking'],
+      skipPaths: ['logs/', 'temp/']
+    },
+    
+    // Integration Services
+    'zalo-api': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'api', 'integration'],
+      focusAreas: ['Zalo integration', 'API authentication', 'Message handling', 'Rate limiting'],
+      skipPaths: ['test/', 'docs/']
+    },
+    
+    'e4net-api': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'api', 'integration'],
+      focusAreas: ['E4Net integration', 'API security', 'Data mapping', 'Error handling'],
+      skipPaths: ['test/', 'docs/']
+    },
+    
+    // Scheduler & Sync Services
+    'inboundscheduler': {
+      enableReview: true,
+      reviewTypes: ['bug', 'performance', 'scheduling', 'reliability'],
+      focusAreas: ['Scheduling accuracy', 'Job reliability', 'Queue management', 'Error recovery'],
+      skipPaths: ['logs/', 'temp/']
+    },
+    
+    'statussynchronize_v2': {
+      enableReview: true,
+      reviewTypes: ['bug', 'performance', 'synchronization', 'consistency'],
+      focusAreas: ['Data synchronization', 'Status consistency', 'Conflict resolution', 'Performance'],
+      skipPaths: ['logs/', 'cache/']
+    },
+    
+    // Other Services
+    'galaxia': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'performance', 'api'],
+      focusAreas: ['Core functionality', 'API design', 'Performance optimization', 'Security'],
+      skipPaths: ['test/', 'docs/']
+    },
+    
+    'kt-promotion': {
+      enableReview: true,
+      reviewTypes: ['bug', 'business-logic', 'validation', 'performance'],
+      focusAreas: ['Promotion logic', 'Validation rules', 'Campaign management', 'Performance'],
+      skipPaths: ['reports/', 'temp/']
+    },
+    
+    'gme-monitor': {
+      enableReview: true,
+      reviewTypes: ['bug', 'performance', 'monitoring', 'alerting'],
+      focusAreas: ['Monitoring accuracy', 'Alert reliability', 'Performance metrics', 'Dashboard optimization'],
+      skipPaths: ['logs/', 'data/', 'cache/']
     }
   },
 

@@ -63,15 +63,72 @@ BITBUCKET_APP_PASSWORD_3=third-app-password
 
 ## 4. 지원되는 저장소 목록
 
-### 현재 설정된 저장소들:
+### 현재 설정된 저장소들 (총 30개):
 
-| 저장소 | 리뷰 포커스 | 제외 경로 |
-|--------|-------------|-----------|
-| gme-frontend | UI/UX, 성능, 접근성 | node_modules, build, dist, .next |
-| gme-backend | 보안, API, 데이터베이스 | tests, migrations, seeds |
-| gme-admin | 권한, 보안, UI | node_modules, build, dist |
-| gme-mobile | 메모리, 배터리, 성능 | ios/Pods, android/build |
-| gme-codereview | 웹훅, API 통합 | logs, test |
+#### 📱 모바일 앱
+| 저장소 | 리뷰 포커스 | 특별 관리 사항 |
+|--------|-------------|--------------|
+| gmeios | Swift, iOS 가이드라인, 메모리 | Pods, DerivedData 제외 |
+| gmeandroid | Kotlin, Material Design, ANR | gradle, build 제외 |
+| mobile | Cross-platform, 반응형 | assets, build 제외 |
+
+#### 🎯 코어 서비스
+| 저장소 | 리뷰 포커스 | 특별 관리 사항 |
+|--------|-------------|--------------|
+| core | 비즈니스 로직, 시스템 안정성 | 아키텍처 검토 |
+| database | SQL injection, 쿼리 최적화 | 트랜잭션 관리 |
+| online-service | API 응답시간, 가용성 | Rate limiting |
+
+#### 🏦 뱅킹 파트너
+| 저장소 | 리뷰 포커스 | 특별 관리 사항 |
+|--------|-------------|--------------|
+| alifbank_v2 | 뱅킹 규정, 트랜잭션 보안 | 컴플라이언스 |
+| sacombank | 뱅킹 보안, API 호환성 | 컴플라이언스 |
+| kbank-service | 서비스 신뢰성, API 보안 | 트랜잭션 처리 |
+| bracbank | 보안 프로토콜, 데이터 프라이버시 | 컴플라이언스 |
+| kbank | 뱅킹 통합, 트랜잭션 처리 | API 신뢰성 |
+
+#### 💰 결제 서비스
+| 저장소 | 리뷰 포커스 | 특별 관리 사항 |
+|--------|-------------|--------------|
+| sendmn-billpayment | 결제 처리, 청구 검증 | 트랜잭션 무결성 |
+| schedulepaymentsvc | 결제 스케줄링, 보안 | 스케줄 신뢰성 |
+| paysend_outbound | 결제 보안, 발신 검증 | 트랜잭션 추적 |
+| payform_outbound | 결제 검증, API 계약 | 에러 처리 |
+
+#### 🔐 인증 & 보안
+| 저장소 | 리뷰 포커스 | 특별 관리 사항 |
+|--------|-------------|--------------|
+| gmehom-auth | 인증 보안, 토큰 관리 | 세션 처리, 권한 체크 |
+| gmehom-finance | 금융 계산, 컴플라이언스 | 감사 추적 |
+
+#### 🔌 통합 서비스
+| 저장소 | 리뷰 포커스 | 특별 관리 사항 |
+|--------|-------------|--------------|
+| zalo-api | Zalo 통합, API 인증 | 메시지 처리 |
+| e4net-api | E4Net 통합, 데이터 매핑 | API 보안 |
+
+#### ⏰ 스케줄러 & 동기화
+| 저장소 | 리뷰 포커스 | 특별 관리 사항 |
+|--------|-------------|--------------|
+| inboundscheduler | 스케줄링 정확도, 큐 관리 | 작업 신뢰성 |
+| statussynchronize_v2 | 데이터 동기화, 일관성 | 충돌 해결 |
+
+#### 🌐 웹 & 포털
+| 저장소 | 리뷰 포커스 | 특별 관리 사항 |
+|--------|-------------|--------------|
+| gme-frontend | React, TypeScript, 접근성 | 성능 최적화 |
+| gme-backend | API 설계, 보안, 데이터베이스 | SQL injection |
+| gme-admin | 권한 체크, 관리자 보안 | 데이터 유출 방지 |
+| partner_portal_upgrade | 파트너 인증, UX | 포털 보안 |
+
+#### 📊 모니터링 & 기타
+| 저장소 | 리뷰 포커스 | 특별 관리 사항 |
+|--------|-------------|--------------|
+| gme-monitor | 모니터링 정확도, 알림 | 대시보드 최적화 |
+| kt-promotion | 프로모션 로직, 검증 규칙 | 캠페인 관리 |
+| galaxia | API 설계, 성능 최적화 | 핵심 기능 |
+| gme-codereview | 웹훅 처리, API 통합 | 로깅 |
 
 ## 5. 새 저장소 추가하기
 
