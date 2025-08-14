@@ -43,7 +43,7 @@ ${truncatedDiff}${wasTruncated ? '\n... (truncated for length)' : ''}
 Please review this code change.`;
 
       const response = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-5',
         messages: [
           { role: 'system', content: this.systemPrompt },
           { role: 'user', content: userPrompt }
@@ -99,7 +99,7 @@ Individual file reviews have been completed. Please provide:
 Number of files changed: ${files.length}`;
 
       const summaryResponse = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-5',
         messages: [
           { role: 'system', content: 'You are a senior code reviewer providing a PR summary.' },
           { role: 'user', content: summaryPrompt }

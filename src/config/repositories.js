@@ -3,7 +3,7 @@ const repositoryConfigs = {
   // Default configuration for all repositories
   default: {
     enableReview: true,
-    reviewModel: 'gpt-4-turbo-preview',
+    reviewModel: 'gpt-5',
     maxTokens: 1500,
     temperature: 0.3,
     reviewTypes: ['bug', 'security', 'performance', 'quality'],
@@ -12,19 +12,40 @@ const repositoryConfigs = {
 
   // Repository-specific overrides
   repositories: {
-    // Example: Different settings for specific repos
-    'frontend-app': {
+    // GME Remittance 프로젝트 저장소들
+    'gme-frontend': {
       enableReview: true,
-      reviewTypes: ['bug', 'accessibility', 'performance', 'quality'],
-      focusAreas: ['React hooks', 'TypeScript', 'CSS performance'],
+      reviewTypes: ['bug', 'accessibility', 'performance', 'quality', 'ui/ux'],
+      focusAreas: ['React hooks', 'TypeScript', 'CSS performance', '반응형 디자인'],
+      skipPaths: ['node_modules/', 'build/', 'dist/', '.next/', 'public/images/']
+    },
+    
+    'gme-backend': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'performance', 'database', 'api'],
+      focusAreas: ['SQL injection', 'Authentication', 'API design', '트랜잭션 처리', '에러 핸들링'],
+      skipPaths: ['tests/', 'migrations/', 'seeds/']
+    },
+    
+    'gme-admin': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'permissions', 'ui/ux'],
+      focusAreas: ['권한 체크', '관리자 보안', '데이터 유출 방지'],
       skipPaths: ['node_modules/', 'build/', 'dist/']
     },
     
-    'backend-api': {
+    'gme-mobile': {
       enableReview: true,
-      reviewTypes: ['bug', 'security', 'performance', 'database'],
-      focusAreas: ['SQL injection', 'Authentication', 'API design'],
-      skipPaths: ['tests/', 'migrations/']
+      reviewTypes: ['bug', 'performance', 'memory', 'ui/ux', 'battery'],
+      focusAreas: ['메모리 누수', '배터리 사용량', '네트워크 최적화', 'React Native'],
+      skipPaths: ['ios/Pods/', 'android/build/', 'node_modules/']
+    },
+    
+    'gme-codereview': {
+      enableReview: true,
+      reviewTypes: ['bug', 'security', 'performance', 'code-quality'],
+      focusAreas: ['Webhook 처리', 'API 통합', '에러 처리', '로깅'],
+      skipPaths: ['logs/', 'test/', 'node_modules/']
     },
     
     'mobile-app': {
