@@ -41,8 +41,9 @@ Be constructive, specific, and always provide actionable solutions.`;
 
   async reviewCode(diff, filePath, commitMessage) {
     try {
-      // More aggressive truncation for faster processing
-      const MAX_DIFF_SIZE = 4000;  // Reduced from 8000
+      // GPT-5 can handle up to 272,000 input tokens (~1,088,000 characters)
+      // We'll use 200,000 characters to leave room for system prompt and response
+      const MAX_DIFF_SIZE = 200000;  // ~50,000 tokens for diff alone
       let truncatedDiff = diff;
       let wasTruncated = false;
       
@@ -71,7 +72,10 @@ Please review this code change.`;
         messages: [
           { role: 'system', content: this.systemPrompt },
           { role: 'user', content: userPrompt }
-        ]
+        ],
+        // GPT-5 supports up to 128,000 output tokens
+        // We'll request maximum analysis depth
+        max_completion_tokens: 32000  // Allow very detailed analysis per file
       });
 
       return response.choices[0].message.content;
@@ -94,19 +98,25 @@ Please review this code change.`;
     try {
       const { title, description, files } = prData;
       
-      const fileReviews = await Promise.all(
-        files.map(async (file) => {
-          const review = await this.reviewCode(
-            file.diff,
-            file.path,
-            title
-          );
-          return {
-            file: file.path,
-            review
-          };
-        })
-      );
+      logger.info(`Starting PR review with ${files.length} files`);
+      
+      // Process files sequentially for maximum depth
+      const fileReviews = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        logger.info(`Reviewing PR file ${i+1}/${files.length}: ${file.path}`);
+        
+        const review = await this.reviewCode(
+          file.diff,
+          file.path,
+          title
+        );
+        
+        fileReviews.push({
+          file: file.path,
+          review
+        });
+      }
 
       const summaryPrompt = `
 Pull Request: ${title}
@@ -123,15 +133,20 @@ Number of files changed: ${files.length}`;
       const summaryResponse = await openai.chat.completions.create({
         model: 'gpt-5',
         messages: [
-          { role: 'system', content: `You are a senior code reviewer providing a PR summary.
+          { role: 'system', content: `You are a senior code reviewer providing a comprehensive PR summary.
           
-When critical issues are found:
-- Summarize the most dangerous problems first
-- Provide concrete fix recommendations
-- Include code snippets for complex fixes
-- Rate the overall risk level of the PR` },
+Provide an EXTREMELY DETAILED analysis including:
+- Complete assessment of all changes
+- Detailed security analysis
+- Performance impact assessment
+- Code quality metrics
+- Specific recommendations with code examples
+- Risk assessment for each component
+- Testing recommendations
+- Documentation requirements` },
           { role: 'user', content: summaryPrompt }
-        ]
+        ],
+        max_completion_tokens: 16000  // Allow comprehensive PR summary
       });
 
       return {

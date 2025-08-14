@@ -198,27 +198,31 @@ async function handlePush(payload) {
         
         logger.debug(`Found ${files.length} files changed in commit ${commitHash.substring(0, 7)}`);
 
-        // Limit number of files to review to prevent timeout
-        const MAX_FILES_TO_REVIEW = 5;
-        const filesToReview = files.slice(0, MAX_FILES_TO_REVIEW);
-        
         let comment = `## 🤖 Automated Code Review for Commit\n\n`;
         comment += `**Commit:** ${commitHash.substring(0, 7)}\n`;
-        comment += `**Message:** ${commitMessage}\n\n`;
+        comment += `**Message:** ${commitMessage}\n`;
+        comment += `**Files Changed:** ${files.length}\n`;
+        comment += `**Review Mode:** Full Analysis (GPT-5 Maximum Capacity)\n\n`;
         
-        if (files.length > MAX_FILES_TO_REVIEW) {
-          comment += `⚠️ **Note:** Reviewing first ${MAX_FILES_TO_REVIEW} of ${files.length} changed files to prevent timeout.\n\n`;
-        }
-
-        for (const file of filesToReview) {
+        // Process ALL files sequentially for thorough analysis
+        let fileIndex = 0;
+        for (const file of files) {
+          fileIndex++;
+          logger.info(`Reviewing file ${fileIndex}/${files.length}: ${file.path}`);
+          
+          const startTime = Date.now();
           const review = await codeReviewer.reviewCode(
             file.diff,
             file.path,
             commitMessage
           );
           
-          comment += `### 📄 ${file.path}\n\n`;
+          const reviewTime = Date.now() - startTime;
+          
+          comment += `### 📄 [${fileIndex}/${files.length}] ${file.path}\n`;
+          comment += `*Review time: ${(reviewTime/1000).toFixed(1)}s*\n\n`;
           comment += `${review}\n\n`;
+          comment += `---\n\n`;
         }
 
         comment += `---\n*This review was generated automatically by AI.*`;
