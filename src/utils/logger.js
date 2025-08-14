@@ -8,6 +8,10 @@ class Logger {
   }
 
   ensureLogDirectory() {
+    // Skip directory creation in serverless environment
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      return;
+    }
     if (!fs.existsSync(this.logDir)) {
       fs.mkdirSync(this.logDir, { recursive: true });
     }
@@ -28,6 +32,10 @@ class Logger {
   }
 
   writeToFile(filename, content) {
+    // Skip file writing in serverless environment
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      return;
+    }
     const filePath = path.join(this.logDir, filename);
     fs.appendFileSync(filePath, content + '\n', 'utf8');
   }
@@ -123,6 +131,11 @@ class Logger {
   }
 
   getLogs(date = null, type = 'all') {
+    // Return empty array in serverless environment
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      return [];
+    }
+    
     try {
       let filename;
       
@@ -156,6 +169,11 @@ class Logger {
   }
 
   clearLogs(olderThanDays = 30) {
+    // Skip in serverless environment
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      return;
+    }
+    
     try {
       const files = fs.readdirSync(this.logDir);
       const cutoffDate = new Date();
