@@ -51,7 +51,9 @@ const repositoryConfigs = {
       enableReview: true,
       reviewTypes: ['bug', 'memory', 'performance', 'ui/ux', 'battery'],
       focusAreas: ['메모리 관리', 'UI 반응성', 'Swift best practices', 'iOS 가이드라인'],
-      skipPaths: ['Pods/', 'build/', 'DerivedData/', '.xcworkspace/', '*.xcuserstate']
+      skipPaths: ['Pods/', 'build/', 'DerivedData/', '.xcworkspace/', '*.xcuserstate', 
+                  'Base.lproj/', '*.lproj/', 'Assets.xcassets/', '*.storyboard', '*.xib',
+                  'Info.plist', 'Localizable.strings']
     },
     
     // Mobile Apps
@@ -66,7 +68,10 @@ const repositoryConfigs = {
       enableReview: true,
       reviewTypes: ['bug', 'memory', 'performance', 'ui/ux', 'battery'],
       focusAreas: ['메모리 누수', 'ANR 방지', 'Kotlin best practices', 'Material Design'],
-      skipPaths: ['build/', 'gradle/', '.gradle/', '*.apk']
+      skipPaths: ['build/', 'gradle/', '.gradle/', '*.apk', 'app/build/', 
+                  'res/values*/strings.xml', 'res/values*/colors.xml', 'res/values*/dimens.xml',
+                  'res/values*/styles.xml', 'res/values*/arrays.xml', 'res/drawable*/',
+                  'res/mipmap*/', 'res/raw/', '*.properties']
     },
     
     // Core Services

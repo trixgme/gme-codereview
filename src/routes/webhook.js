@@ -197,12 +197,29 @@ async function handlePush(payload) {
         }
         
         logger.debug(`Found ${files.length} files changed in commit ${commitHash.substring(0, 7)}`);
+        
+        // Count total files in diff before filtering
+        const totalFilesInDiff = (diffText.match(/diff --git/g) || []).length;
+        const skippedFiles = totalFilesInDiff - files.length;
 
         let comment = `## 🤖 Automated Code Review for Commit\n\n`;
         comment += `**Commit:** ${commitHash.substring(0, 7)}\n`;
         comment += `**Message:** ${commitMessage}\n`;
-        comment += `**Files Changed:** ${files.length}\n`;
+        comment += `**Files to Review:** ${files.length}`;
+        
+        if (skippedFiles > 0) {
+          comment += ` (${skippedFiles} files skipped - translations/configs/generated)\n`;
+        } else {
+          comment += `\n`;
+        }
+        
         comment += `**Review Mode:** Full Analysis (GPT-5 Maximum Capacity)\n\n`;
+        
+        if (files.length === 0) {
+          comment += `ℹ️ **No files to review** - All changed files are translations, configurations, or generated files that don't require code review.\n\n`;
+          logger.info(`No files to review for commit ${commitHash.substring(0, 7)} - all files filtered`);
+          continue;
+        }
         
         // Process ALL files sequentially for thorough analysis
         let fileIndex = 0;

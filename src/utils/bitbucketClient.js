@@ -170,14 +170,123 @@ class BitbucketClient {
     const files = [];
     const fileRegex = /diff --git a\/(.*?) b\/(.*?)\n([\s\S]*?)(?=diff --git|$)/g;
     let match;
+    
+    // Files to skip from environment variables
+    const skipExtensions = (process.env.SKIP_EXTENSIONS || '').split(',').filter(Boolean);
+    const skipPaths = (process.env.SKIP_PATHS || '').split(',').filter(Boolean);
+    const skipPatterns = (process.env.SKIP_FILE_PATTERNS || '').split(',').filter(Boolean);
+    
+    // Additional hardcoded patterns for translation and config files
+    const translationPatterns = [
+      /strings.*\.xml$/i,
+      /colors\.xml$/i,
+      /dimens\.xml$/i,
+      /styles\.xml$/i,
+      /attrs\.xml$/i,
+      /themes\.xml$/i,
+      /arrays\.xml$/i,
+      /plurals\.xml$/i,
+      /integers\.xml$/i,
+      /bools\.xml$/i,
+      /config\.xml$/i,
+      /\.properties$/i,
+      /messages.*\.properties$/i,
+      /i18n\/.*\.json$/i,
+      /locale\/.*\.json$/i,
+      /lang\/.*\.json$/i,
+      /translation\/.*\.json$/i,
+      /locales\/.*\.(json|yml|yaml)$/i,
+      /\.po$/i,
+      /\.pot$/i,
+      /\.mo$/i
+    ];
+    
+    // Config and generated files to skip
+    const configPatterns = [
+      /package-lock\.json$/i,
+      /yarn\.lock$/i,
+      /composer\.lock$/i,
+      /Gemfile\.lock$/i,
+      /Podfile\.lock$/i,
+      /cargo\.lock$/i,
+      /\.generated\./i,
+      /\.min\./i,
+      /\.bundle\./i,
+      /\.map$/i,
+      /\.sum$/i,
+      /\.cache$/i
+    ];
 
     while ((match = fileRegex.exec(diffText)) !== null) {
-      files.push({
-        path: match[2],
-        diff: match[0]
-      });
+      const filePath = match[2];
+      
+      // Check if file should be skipped
+      let shouldSkip = false;
+      
+      // Check file extension
+      for (const ext of skipExtensions) {
+        if (filePath.endsWith(ext)) {
+          logger.debug(`Skipping file due to extension: ${filePath}`);
+          shouldSkip = true;
+          break;
+        }
+      }
+      
+      // Check paths
+      if (!shouldSkip) {
+        for (const path of skipPaths) {
+          if (filePath.includes(path)) {
+            logger.debug(`Skipping file due to path: ${filePath}`);
+            shouldSkip = true;
+            break;
+          }
+        }
+      }
+      
+      // Check translation patterns
+      if (!shouldSkip) {
+        for (const pattern of translationPatterns) {
+          if (pattern.test(filePath)) {
+            logger.debug(`Skipping translation file: ${filePath}`);
+            shouldSkip = true;
+            break;
+          }
+        }
+      }
+      
+      // Check config patterns
+      if (!shouldSkip) {
+        for (const pattern of configPatterns) {
+          if (pattern.test(filePath)) {
+            logger.debug(`Skipping config/generated file: ${filePath}`);
+            shouldSkip = true;
+            break;
+          }
+        }
+      }
+      
+      // Check custom skip patterns
+      if (!shouldSkip) {
+        for (const pattern of skipPatterns) {
+          // Convert glob pattern to regex
+          const regex = new RegExp(pattern.replace(/\*/g, '.*').replace(/\?/g, '.'), 'i');
+          if (regex.test(filePath)) {
+            logger.debug(`Skipping file due to custom pattern: ${filePath}`);
+            shouldSkip = true;
+            break;
+          }
+        }
+      }
+      
+      if (!shouldSkip) {
+        files.push({
+          path: filePath,
+          diff: match[0]
+        });
+      }
     }
-
+    
+    logger.info(`Parsed diff: ${files.length} files to review (after filtering)`);
     return files;
   }
 }
