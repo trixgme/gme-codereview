@@ -94,6 +94,43 @@ const repositoryConfigs = {
       prompt += `\nPay special attention to:\n- ${config.focusAreas.join('\n- ')}\n`;
     }
     
+    // Add repository-specific fix instructions
+    prompt += `\n\n**CRITICAL REQUIREMENT**:\n`;
+    
+    if (repoName === 'gme-backend') {
+      prompt += `For this backend repository, ALWAYS provide fixes for:\n`;
+      prompt += `- SQL injection vulnerabilities\n`;
+      prompt += `- Authentication/authorization issues\n`;
+      prompt += `- Data validation problems\n`;
+      prompt += `- API security flaws\n`;
+    } else if (repoName === 'gme-frontend') {
+      prompt += `For this frontend repository, ALWAYS provide fixes for:\n`;
+      prompt += `- XSS vulnerabilities\n`;
+      prompt += `- React hook violations\n`;
+      prompt += `- Performance bottlenecks\n`;
+      prompt += `- Accessibility issues\n`;
+    } else if (repoName === 'gme-mobile') {
+      prompt += `For this mobile app, ALWAYS provide fixes for:\n`;
+      prompt += `- Memory leaks\n`;
+      prompt += `- Battery drain issues\n`;
+      prompt += `- Unsafe network calls\n`;
+      prompt += `- Platform-specific bugs\n`;
+    } else if (repoName === 'gme-admin') {
+      prompt += `For this admin panel, ALWAYS provide fixes for:\n`;
+      prompt += `- Permission bypasses\n`;
+      prompt += `- Admin privilege escalation\n`;
+      prompt += `- Sensitive data exposure\n`;
+      prompt += `- Audit logging gaps\n`;
+    } else {
+      prompt += `ALWAYS provide corrected code when you find:\n`;
+      prompt += `- Security vulnerabilities\n`;
+      prompt += `- Critical bugs\n`;
+      prompt += `- Performance issues\n`;
+      prompt += `- Code that could cause runtime errors\n`;
+    }
+    
+    prompt += `\nShow the fixed code with clear "Before" and "After" examples.`;
+    
     return prompt;
   },
 

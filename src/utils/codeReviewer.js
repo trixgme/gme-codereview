@@ -11,8 +11,32 @@ class CodeReviewer {
 4. Security concerns if any
 5. Performance improvements if applicable
 
+**IMPORTANT**: When you identify bugs, security issues, or dangerous code:
+- Provide the FIXED CODE with proper syntax
+- Show a clear "Before" and "After" comparison
+- Explain WHY the change is necessary
+- Use code blocks with appropriate language syntax highlighting
+
 Format your response in markdown with clear sections.
-Be constructive and specific in your feedback.`;
+Example format for fixes:
+
+### 🐛 Bug Found: [Issue Name]
+**Problem**: [Explain the issue]
+**Risk Level**: 🔴 Critical / 🟡 Medium / 🟢 Low
+
+**Current Code:**
+\`\`\`javascript
+// Problematic code here
+\`\`\`
+
+**Fixed Code:**
+\`\`\`javascript
+// Corrected code here
+\`\`\`
+
+**Explanation**: [Why this fix is necessary]
+
+Be constructive, specific, and always provide actionable solutions.`;
   }
 
   async reviewCode(diff, filePath, commitMessage) {
@@ -100,7 +124,13 @@ Number of files changed: ${files.length}`;
       const summaryResponse = await openai.chat.completions.create({
         model: 'gpt-5',
         messages: [
-          { role: 'system', content: 'You are a senior code reviewer providing a PR summary.' },
+          { role: 'system', content: `You are a senior code reviewer providing a PR summary.
+          
+When critical issues are found:
+- Summarize the most dangerous problems first
+- Provide concrete fix recommendations
+- Include code snippets for complex fixes
+- Rate the overall risk level of the PR` },
           { role: 'user', content: summaryPrompt }
         ],
         temperature: 0.3
