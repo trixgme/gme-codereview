@@ -1,5 +1,6 @@
 const openai = require('../config/openai');
 const errorHandler = require('./errorHandler');
+const logger = require('./logger');
 
 class CodeReviewer {
   constructor() {
@@ -16,13 +17,27 @@ Be constructive and specific in your feedback.`;
 
   async reviewCode(diff, filePath, commitMessage) {
     try {
+      // Truncate large diffs to avoid token limits
+      const MAX_DIFF_SIZE = 8000;
+      let truncatedDiff = diff;
+      let wasTruncated = false;
+      
+      if (diff.length > MAX_DIFF_SIZE) {
+        truncatedDiff = diff.substring(0, MAX_DIFF_SIZE);
+        wasTruncated = true;
+        logger.warning(`Diff truncated for file ${filePath}`, {
+          originalSize: diff.length,
+          truncatedSize: MAX_DIFF_SIZE
+        });
+      }
+      
       const userPrompt = `
 File: ${filePath}
 Commit Message: ${commitMessage}
 
 Code Diff:
 \`\`\`diff
-${diff}
+${truncatedDiff}${wasTruncated ? '\n... (truncated for length)' : ''}
 \`\`\`
 
 Please review this code change.`;

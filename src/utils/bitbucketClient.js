@@ -39,27 +39,47 @@ class BitbucketClient {
   }
 
   async getPullRequestDetails(repoSlug, prId) {
+    const startTime = Date.now();
     try {
       const response = await axios.get(
         `${this.baseURL}/repositories/${this.workspace}/${repoSlug}/pullrequests/${prId}`,
         { auth: this.auth }
       );
+      const responseTime = Date.now() - startTime;
+      logger.apiCall('Bitbucket', 'getPullRequestDetails', true, responseTime);
       return response.data;
     } catch (error) {
-      console.error('Error fetching PR details:', error);
+      const responseTime = Date.now() - startTime;
+      logger.apiCall('Bitbucket', 'getPullRequestDetails', false, responseTime);
+      logger.error('Error fetching PR details', {
+        error: error.message,
+        status: error.response?.status,
+        repoSlug,
+        prId
+      });
       throw new Error(`Failed to fetch PR details: ${error.message}`);
     }
   }
 
   async getCommitDiff(repoSlug, commitHash) {
+    const startTime = Date.now();
     try {
       const response = await axios.get(
         `${this.baseURL}/repositories/${this.workspace}/${repoSlug}/diff/${commitHash}`,
         { auth: this.auth }
       );
+      const responseTime = Date.now() - startTime;
+      logger.apiCall('Bitbucket', 'getCommitDiff', true, responseTime);
       return response.data;
     } catch (error) {
-      console.error('Error fetching commit diff:', error);
+      const responseTime = Date.now() - startTime;
+      logger.apiCall('Bitbucket', 'getCommitDiff', false, responseTime);
+      logger.error('Error fetching commit diff', {
+        error: error.message,
+        status: error.response?.status,
+        repoSlug,
+        commitHash
+      });
       throw new Error(`Failed to fetch commit diff: ${error.message}`);
     }
   }
@@ -100,9 +120,14 @@ class BitbucketClient {
   }
 
   async postCommitComment(repoSlug, commitHash, content) {
+    const startTime = Date.now();
+    const endpoint = `${this.baseURL}/repositories/${this.workspace}/${repoSlug}/commit/${commitHash}/comments`;
+    
     try {
+      logger.debug(`Posting commit comment`, { repoSlug, commitHash, contentLength: content.length });
+      
       const response = await axios.post(
-        `${this.baseURL}/repositories/${this.workspace}/${repoSlug}/commit/${commitHash}/comments`,
+        endpoint,
         {
           content: {
             raw: content
@@ -110,9 +135,21 @@ class BitbucketClient {
         },
         { auth: this.auth }
       );
+      
+      const responseTime = Date.now() - startTime;
+      logger.apiCall('Bitbucket', 'postCommitComment', true, responseTime);
+      logger.success(`Posted comment to commit ${commitHash.substring(0, 7)}`, { repoSlug, commitHash });
+      
       return response.data;
     } catch (error) {
-      console.error('Error posting commit comment:', error);
+      const responseTime = Date.now() - startTime;
+      logger.apiCall('Bitbucket', 'postCommitComment', false, responseTime);
+      logger.error('Error posting commit comment', {
+        error: error.message,
+        status: error.response?.status,
+        repoSlug,
+        commitHash
+      });
       throw new Error(`Failed to post commit comment: ${error.message}`);
     }
   }
