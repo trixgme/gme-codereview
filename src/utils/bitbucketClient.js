@@ -63,22 +63,34 @@ class BitbucketClient {
 
   async getCommitDiff(repoSlug, commitHash) {
     const startTime = Date.now();
+    const url = `${this.baseURL}/repositories/${this.workspace}/${repoSlug}/diff/${commitHash}`;
+    
+    console.log('[BITBUCKET] Fetching diff from:', url);
+    console.log('[BITBUCKET] Workspace:', this.workspace);
+    console.log('[BITBUCKET] Repo:', repoSlug);
+    console.log('[BITBUCKET] Commit:', commitHash);
+    
     try {
-      const response = await axios.get(
-        `${this.baseURL}/repositories/${this.workspace}/${repoSlug}/diff/${commitHash}`,
-        { auth: this.auth }
-      );
+      const response = await axios.get(url, { auth: this.auth });
       const responseTime = Date.now() - startTime;
       logger.apiCall('Bitbucket', 'getCommitDiff', true, responseTime);
+      console.log('[BITBUCKET] Diff fetched successfully');
       return response.data;
     } catch (error) {
       const responseTime = Date.now() - startTime;
       logger.apiCall('Bitbucket', 'getCommitDiff', false, responseTime);
+      
+      console.error('[BITBUCKET] Error details:');
+      console.error('[BITBUCKET] Status:', error.response?.status);
+      console.error('[BITBUCKET] Message:', error.message);
+      console.error('[BITBUCKET] Response data:', error.response?.data);
+      
       logger.error('Error fetching commit diff', {
         error: error.message,
         status: error.response?.status,
         repoSlug,
-        commitHash
+        commitHash,
+        workspace: this.workspace
       });
       throw new Error(`Failed to fetch commit diff: ${error.message}`);
     }

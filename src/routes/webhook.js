@@ -17,13 +17,19 @@ router.post('/bitbucket',
       logger.webhook(eventType, payload);
       logger.debug('Full webhook payload', payload);
 
+      console.log(`[WEBHOOK] Processing event: ${eventType}`);
+      console.log(`[WEBHOOK] Repository:`, payload?.repository?.name);
+      console.log(`[WEBHOOK] Workspace:`, payload?.repository?.workspace?.slug);
+      
       switch (eventType) {
         case 'pullrequest:created':
         case 'pullrequest:updated':
+          console.log('[WEBHOOK] Handling pull request');
           await handlePullRequest(payload);
           break;
         
         case 'repo:push':
+          console.log('[WEBHOOK] Handling push event');
           await handlePush(payload);
           break;
         
@@ -41,6 +47,10 @@ router.post('/bitbucket',
       });
     } catch (error) {
       const responseTime = Date.now() - startTime;
+      console.error('[WEBHOOK ERROR] Full error:', error);
+      console.error('[WEBHOOK ERROR] Message:', error.message);
+      console.error('[WEBHOOK ERROR] Stack:', error.stack);
+      
       logger.error('Error processing webhook', {
         error: error.message,
         stack: error.stack,
@@ -48,7 +58,11 @@ router.post('/bitbucket',
         responseTime
       });
       
-      res.status(500).json({ error: 'Failed to process webhook' });
+      // Return success to prevent Bitbucket from retrying
+      res.status(200).json({ 
+        message: 'Webhook received but processing failed',
+        error: error.message 
+      });
     }
 });
 
@@ -123,18 +137,38 @@ async function handlePush(payload) {
   const startTime = Date.now();
   
   try {
+    console.log('[HANDLE_PUSH] Starting push handler');
+    console.log('[HANDLE_PUSH] Payload keys:', Object.keys(payload));
+    
     const { push, repository } = payload;
     const repoSlug = repository.name;
+    
+    console.log('[HANDLE_PUSH] Repository:', repoSlug);
+    console.log('[HANDLE_PUSH] Changes count:', push?.changes?.length || 0);
     
     logger.info(`Processing push event for repository: ${repoSlug}`, {
       repository: repoSlug,
       changes: push.changes?.length || 0
     });
     
+    // Check if push.changes exists
+    if (!push || !push.changes || push.changes.length === 0) {
+      console.log('[HANDLE_PUSH] No changes found in push event');
+      console.log('[HANDLE_PUSH] Push object:', JSON.stringify(push, null, 2));
+      return;
+    }
+    
     for (const change of push.changes) {
-      if (change.new && change.new.type === 'commit') {
+      console.log('[HANDLE_PUSH] Processing change:', JSON.stringify(change, null, 2));
+      console.log('[HANDLE_PUSH] Change type:', change?.new?.type);
+      
+      // Handle both 'commit' and 'branch' types
+      if (change.new && (change.new.type === 'commit' || change.new.type === 'branch')) {
         const commitHash = change.new.target.hash;
         const commitMessage = change.new.target.message;
+        
+        console.log('[HANDLE_PUSH] Processing commit:', commitHash.substring(0, 7));
+        console.log('[HANDLE_PUSH] Commit message:', commitMessage);
         
         logger.info(`Processing commit: ${commitHash.substring(0, 7)}`, {
           repository: repoSlug,
@@ -142,7 +176,16 @@ async function handlePush(payload) {
           message: commitMessage
         });
 
-        const diffText = await bitbucketClient.getCommitDiff(repoSlug, commitHash);
+        let diffText;
+        try {
+          diffText = await bitbucketClient.getCommitDiff(repoSlug, commitHash);
+          console.log('[HANDLE_PUSH] Diff fetched, length:', diffText?.length || 0);
+        } catch (diffError) {
+          console.error('[HANDLE_PUSH] Error fetching diff:', diffError.message);
+          console.error('[HANDLE_PUSH] Workspace:', process.env.BITBUCKET_WORKSPACE);
+          console.error('[HANDLE_PUSH] Repository:', repoSlug);
+          throw diffError;
+        }
         const files = bitbucketClient.parseDiff(diffText);
 
         if (files.length === 0) {
