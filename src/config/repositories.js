@@ -4,7 +4,6 @@ const repositoryConfigs = {
   default: {
     enableReview: true,
     reviewModel: 'gpt-5',
-    temperature: 0.3,
     reviewTypes: ['bug', 'security', 'performance', 'quality'],
     autoApprove: false
   },
@@ -45,6 +44,13 @@ const repositoryConfigs = {
       reviewTypes: ['bug', 'security', 'performance', 'code-quality'],
       focusAreas: ['Webhook 처리', 'API 통합', '에러 처리', '로깅'],
       skipPaths: ['logs/', 'test/', 'node_modules/']
+    },
+    
+    'gmeIos': {
+      enableReview: true,
+      reviewTypes: ['bug', 'memory', 'performance', 'ui/ux', 'battery'],
+      focusAreas: ['메모리 관리', 'UI 반응성', 'Swift best practices', 'iOS 가이드라인'],
+      skipPaths: ['Pods/', 'build/', 'DerivedData/', '.xcworkspace/', '*.xcuserstate']
     },
     
     'mobile-app': {

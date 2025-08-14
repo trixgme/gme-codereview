@@ -71,8 +71,7 @@ Please review this code change.`;
         messages: [
           { role: 'system', content: this.systemPrompt },
           { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.3
+        ]
       });
 
       return response.choices[0].message.content;
@@ -132,8 +131,7 @@ When critical issues are found:
 - Include code snippets for complex fixes
 - Rate the overall risk level of the PR` },
           { role: 'user', content: summaryPrompt }
-        ],
-        temperature: 0.3
+        ]
       });
 
       return {
