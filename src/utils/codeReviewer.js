@@ -41,8 +41,8 @@ Be constructive, specific, and always provide actionable solutions.`;
 
   async reviewCode(diff, filePath, commitMessage) {
     try {
-      // Truncate large diffs to avoid token limits
-      const MAX_DIFF_SIZE = 8000;
+      // More aggressive truncation for faster processing
+      const MAX_DIFF_SIZE = 4000;  // Reduced from 8000
       let truncatedDiff = diff;
       let wasTruncated = false;
       

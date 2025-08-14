@@ -198,11 +198,19 @@ async function handlePush(payload) {
         
         logger.debug(`Found ${files.length} files changed in commit ${commitHash.substring(0, 7)}`);
 
+        // Limit number of files to review to prevent timeout
+        const MAX_FILES_TO_REVIEW = 5;
+        const filesToReview = files.slice(0, MAX_FILES_TO_REVIEW);
+        
         let comment = `## 🤖 Automated Code Review for Commit\n\n`;
         comment += `**Commit:** ${commitHash.substring(0, 7)}\n`;
         comment += `**Message:** ${commitMessage}\n\n`;
+        
+        if (files.length > MAX_FILES_TO_REVIEW) {
+          comment += `⚠️ **Note:** Reviewing first ${MAX_FILES_TO_REVIEW} of ${files.length} changed files to prevent timeout.\n\n`;
+        }
 
-        for (const file of files) {
+        for (const file of filesToReview) {
           const review = await codeReviewer.reviewCode(
             file.diff,
             file.path,

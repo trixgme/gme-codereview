@@ -62,7 +62,7 @@ const repositoryConfigs = {
       skipPaths: ['assets/', 'node_modules/', 'build/']
     },
     
-    'gmeandroid': {
+    'gmeAndroid': {  // Bitbucket에서 사용하는 정확한 이름
       enableReview: true,
       reviewTypes: ['bug', 'memory', 'performance', 'ui/ux', 'battery'],
       focusAreas: ['메모리 누수', 'ANR 방지', 'Kotlin best practices', 'Material Design'],
