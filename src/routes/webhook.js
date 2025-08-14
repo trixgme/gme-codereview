@@ -158,6 +158,9 @@ async function handlePush(payload) {
       return;
     }
     
+    // Track processed commits to avoid duplicates
+    const processedCommits = new Set();
+    
     for (const change of push.changes) {
       console.log('[HANDLE_PUSH] Processing change:', JSON.stringify(change, null, 2));
       console.log('[HANDLE_PUSH] Change type:', change?.new?.type);
@@ -166,6 +169,13 @@ async function handlePush(payload) {
       if (change.new && (change.new.type === 'commit' || change.new.type === 'branch')) {
         const commitHash = change.new.target.hash;
         const commitMessage = change.new.target.message;
+        
+        // Skip if we've already processed this commit
+        if (processedCommits.has(commitHash)) {
+          console.log('[HANDLE_PUSH] Skipping duplicate commit:', commitHash.substring(0, 7));
+          continue;
+        }
+        processedCommits.add(commitHash);
         
         console.log('[HANDLE_PUSH] Processing commit:', commitHash.substring(0, 7));
         console.log('[HANDLE_PUSH] Commit message:', commitMessage);

@@ -121,9 +121,19 @@ async function handlePushWithConfig(payload, config) {
     return;
   }
   
+  // Track processed commits to avoid duplicates
+  const processedCommits = new Set();
+  
   for (const change of push.changes) {
     if (change.new && (change.new.type === 'commit' || change.new.type === 'branch')) {
       const commitHash = change.new.target.hash;
+      
+      // Skip if we've already processed this commit
+      if (processedCommits.has(commitHash)) {
+        console.log('[PUSH] Skipping duplicate commit:', commitHash.substring(0, 7));
+        continue;
+      }
+      processedCommits.add(commitHash);
       
       try {
         // Get commit diff
