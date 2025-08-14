@@ -1,0 +1,66 @@
+{
+  "timestamp": "2025-08-14T05:45:20.924Z",
+  "level": "INFO",
+  "message": "Incoming GET /logs/webhooks",
+  "data": {
+    "method": "GET",
+    "path": "/logs/webhooks",
+    "query": {},
+    "headers": {
+      "user-agent": "curl/8.7.1"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-14T05:45:20.926Z",
+  "level": "INFO",
+  "message": "Response GET /webhooks",
+  "data": {
+    "method": "GET",
+    "path": "/webhooks",
+    "statusCode": 200,
+    "duration": "2ms"
+  }
+}
+{
+  "timestamp": "2025-08-14T05:46:07.442Z",
+  "level": "INFO",
+  "message": "Incoming POST /webhook/bitbucket",
+  "data": {
+    "method": "POST",
+    "path": "/webhook/bitbucket",
+    "query": {},
+    "headers": {
+      "x-event-key": "repo:push",
+      "x-hook-uuid": "test-uuid-12345",
+      "user-agent": "axios/1.11.0"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-14T05:46:07.442Z",
+  "level": "INFO",
+  "message": "Webhook received: repo:push",
+  "data": {
+    "eventType": "repo:push",
+    "repository": "test-repo",
+    "workspace": "gmeremittance",
+    "actor": "Test User",
+    "push": {
+      "changes": 1
+    }
+  }
+}
+{
+  "timestamp": "2025-08-14T05:46:08.081Z",
+  "level": "ERROR",
+  "message": "Error processing webhook",
+  "data": {
+    "error": "Failed to fetch commit diff: Request failed with status code 404",
+    "stack": "Error: Failed to fetch commit diff: Request failed with status code 404\n    at BitbucketClient.getCommitDiff (/Users/seiheehan/Documents/GitHub/gme-codereview/src/utils/bitbucketClient.js:83:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async handlePush (/Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:145:26)\n    at async /Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:27:11",
+    "eventType": "repo:push",
+    "responseTime": 639
+  }
+}

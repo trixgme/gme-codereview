@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-08-14T05:46:08.081Z",
+  "level": "ERROR",
+  "message": "API call to Bitbucket",
+  "data": {
+    "service": "Bitbucket",
+    "endpoint": "getCommitDiff",
+    "success": false,
+    "responseTime": "638ms"
+  }
+}
+{
+  "timestamp": "2025-08-14T05:46:08.081Z",
+  "level": "ERROR",
+  "message": "Error fetching commit diff",
+  "data": {
+    "error": "Request failed with status code 404",
+    "status": 404,
+    "repoSlug": "test-repo",
+    "commitHash": "abc123def456789"
+  }
+}
+{
+  "timestamp": "2025-08-14T05:46:08.081Z",
+  "level": "ERROR",
+  "message": "Error handling push",
+  "data": {
+    "error": "Failed to fetch commit diff: Request failed with status code 404",
+    "repository": "test-repo",
+    "processingTime": "639ms"
+  }
+}
+{
+  "timestamp": "2025-08-14T05:46:08.081Z",
+  "level": "ERROR",
+  "message": "Error processing webhook",
+  "data": {
+    "error": "Failed to fetch commit diff: Request failed with status code 404",
+    "stack": "Error: Failed to fetch commit diff: Request failed with status code 404\n    at BitbucketClient.getCommitDiff (/Users/seiheehan/Documents/GitHub/gme-codereview/src/utils/bitbucketClient.js:83:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async handlePush (/Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:145:26)\n    at async /Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:27:11",
+    "eventType": "repo:push",
+    "responseTime": 639
+  }
+}
