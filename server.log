@@ -1,0 +1,28 @@
+
+> gme-codereview@1.0.0 dev
+> node index.js
+
+[dotenv@17.2.1] injecting env (7) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[36m[2025-08-14T04:55:35.331Z] [INFO] 🚀 Code Review Bot is running on port 3000[0m
+[36m[2025-08-14T04:55:35.331Z] [INFO] Environment: production[0m
+[36m[2025-08-14T04:55:35.332Z] [INFO] Configuration Status[0m
+Data: {
+  "OpenAI API": true,
+  "Bitbucket Workspace": true,
+  "Bitbucket Auth": true,
+  "Webhook Secret": true
+}
+
+📋 Configuration Status:
+  ✅ OpenAI API
+  ✅ Bitbucket Workspace
+  ✅ Bitbucket Auth
+  ✅ Webhook Secret
+
+📊 Log endpoints available:
+  GET /logs - View recent logs
+  GET /logs/webhooks - View webhook logs
+  GET /logs/errors - View error logs
+  GET /logs/stats - View log statistics
