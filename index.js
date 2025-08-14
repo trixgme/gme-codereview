@@ -3,7 +3,7 @@ const logger = require('./src/utils/logger');
 
 const PORT = process.env.PORT || 3000;
 
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, () => {
   logger.info(`🚀 Code Review Bot is running on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
   
@@ -48,8 +48,5 @@ process.on('SIGINT', () => {
     process.exit(0);
   });
 });
-
-// Keep the process running
-process.stdin.resume();
 
 module.exports = server;

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(rm:*)",
       "Bash(curl:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []
