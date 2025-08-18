@@ -7,7 +7,8 @@ const logger = require('../utils/logger');
 const processedCommitsCache = require('../utils/processedCommitsCache');
 const slackNotifier = require('../utils/slackNotifier');
 
-router.post('/bitbucket/:workspace?', async (req, res) => {
+// Optional workspace parameter handled differently
+router.post(['/bitbucket', '/bitbucket/:workspace'], async (req, res) => {
   const startTime = Date.now();
   
   try {

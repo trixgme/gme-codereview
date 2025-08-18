@@ -161,9 +161,18 @@ async function handlePush(payload) {
     
     for (const change of push.changes) {
       console.log('[HANDLE_PUSH] Processing change:', JSON.stringify(change, null, 2));
+      console.log('[HANDLE_PUSH] Change new:', change?.new);
+      console.log('[HANDLE_PUSH] Change old:', change?.old);
       console.log('[HANDLE_PUSH] Change type:', change?.new?.type);
       
+      // Log the actual structure to understand what Bitbucket sends
+      if (!change.new) {
+        console.log('[HANDLE_PUSH] WARNING: change.new is undefined');
+        console.log('[HANDLE_PUSH] Full change object:', JSON.stringify(change, null, 2));
+      }
+      
       // Handle both 'commit' and 'branch' types
+      // Also check if commits field exists (some webhook formats)
       if (change.new && (change.new.type === 'commit' || change.new.type === 'branch')) {
         const commitHash = change.new.target.hash;
         const commitMessage = change.new.target.message;
@@ -289,6 +298,83 @@ async function handlePush(payload) {
           });
           throw commentError;
         }
+      } else if (change.commits && Array.isArray(change.commits)) {
+        // Some push events have commits array instead of new.target
+        console.log('[HANDLE_PUSH] Found commits array with', change.commits.length, 'commits');
+        
+        for (const commit of change.commits) {
+          const commitHash = commit.hash;
+          const commitMessage = commit.message;
+          
+          console.log('[HANDLE_PUSH] Processing commit from array:', commitHash.substring(0, 7));
+          
+          // Check cache and process similar to above
+          if (processedCommitsCache.has(repoSlug, commitHash)) {
+            console.log('[HANDLE_PUSH] Skipping commit (already in cache):', commitHash.substring(0, 7));
+            continue;
+          }
+          
+          const hasExistingReview = await bitbucketClient.hasAutomatedReview(repoSlug, commitHash);
+          if (hasExistingReview) {
+            console.log('[HANDLE_PUSH] Skipping commit (review already exists):', commitHash.substring(0, 7));
+            processedCommitsCache.add(repoSlug, commitHash);
+            continue;
+          }
+          
+          processedCommitsCache.add(repoSlug, commitHash);
+          
+          // Process diff and review
+          try {
+            const diffText = await bitbucketClient.getCommitDiff(repoSlug, commitHash);
+            const files = bitbucketClient.parseDiff(diffText);
+            
+            if (files.length === 0) {
+              logger.warning('No files changed in commit', { 
+                commit: commitHash.substring(0, 7),
+                repository: repoSlug 
+              });
+              continue;
+            }
+            
+            // Generate review comment (simplified version)
+            let comment = `## 🤖 Automated Code Review for Commit\n\n`;
+            comment += `**Commit:** ${commitHash.substring(0, 7)}\n`;
+            comment += `**Message:** ${commitMessage}\n`;
+            comment += `**Files to Review:** ${files.length}\n\n`;
+            
+            for (const file of files) {
+              const review = await codeReviewer.reviewCode(
+                file.diff,
+                file.path,
+                commitMessage
+              );
+              
+              comment += `### 📄 ${file.path}\n`;
+              comment += `${review}\n\n`;
+              comment += `---\n\n`;
+            }
+            
+            comment += `---\n*This review was generated automatically by AI.*`;
+            
+            await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
+            
+            logger.success(`Successfully posted review for commit ${commitHash.substring(0, 7)}`, {
+              commit: commitHash.substring(0, 7),
+              repository: repoSlug,
+              filesReviewed: files.length
+            });
+          } catch (error) {
+            processedCommitsCache.remove(repoSlug, commitHash);
+            logger.error('Failed to process commit from array', {
+              commit: commitHash.substring(0, 7),
+              repository: repoSlug,
+              error: error.message
+            });
+          }
+        }
+      } else {
+        console.log('[HANDLE_PUSH] Change does not have expected structure');
+        console.log('[HANDLE_PUSH] Keys in change:', Object.keys(change));
       }
     }
     
