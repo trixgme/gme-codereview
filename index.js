@@ -11,7 +11,8 @@ const server = app.listen(PORT, () => {
     'OpenAI API': !!process.env.OPENAI_API_KEY,
     'Bitbucket Workspace': !!process.env.BITBUCKET_WORKSPACE,
     'Bitbucket Auth': !!process.env.BITBUCKET_USERNAME && !!process.env.BITBUCKET_APP_PASSWORD,
-    'Webhook Secret': !!process.env.WEBHOOK_SECRET
+    'Webhook Secret': !!process.env.WEBHOOK_SECRET,
+    'Slack Integration': !!process.env.SLACK_WEBHOOK_URL
   };
   
   logger.info('Configuration Status', configs);
@@ -26,11 +27,15 @@ const server = app.listen(PORT, () => {
     console.log('\n⚠️  Warning: Some configurations are missing. Check your .env file.');
   }
   
-  console.log('\n📊 Log endpoints available:');
-  console.log('  GET /logs - View recent logs');
-  console.log('  GET /logs/webhooks - View webhook logs');
-  console.log('  GET /logs/errors - View error logs');
-  console.log('  GET /logs/stats - View log statistics');
+  console.log('\n📊 Available endpoints:');
+  console.log('  📝 Logs:');
+  console.log('    GET /logs - View recent logs');
+  console.log('    GET /logs/webhooks - View webhook logs');
+  console.log('    GET /logs/errors - View error logs');
+  console.log('    GET /logs/stats - View log statistics');
+  console.log('  💬 Slack:');
+  console.log('    GET /slack/test - Test Slack connection');
+  console.log('    POST /slack/sample - Send sample notification');
 });
 
 process.on('SIGTERM', () => {

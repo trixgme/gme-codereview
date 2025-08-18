@@ -5,6 +5,7 @@ const bitbucketClient = require('../utils/bitbucketClient');
 const repositoryConfigs = require('../config/repositories');
 const logger = require('../utils/logger');
 const processedCommitsCache = require('../utils/processedCommitsCache');
+const slackNotifier = require('../utils/slackNotifier');
 
 router.post('/bitbucket/:workspace?', async (req, res) => {
   const startTime = Date.now();
@@ -102,8 +103,18 @@ async function handlePullRequestWithConfig(payload, config) {
     comment += `**Configuration**: ${config.reviewTypes.join(', ')}\n\n`;
     comment += reviewResult.summary;
     
-    await bitbucketClient.postPullRequestComment(repoSlug, prId, comment);
+    const commentResponse = await bitbucketClient.postPullRequestComment(repoSlug, prId, comment);
     console.log(`[PR] Review posted for PR #${prId}`);
+    
+    // Send Slack notification
+    await slackNotifier.sendCodeReviewNotification({
+      repoSlug: repoSlug,
+      type: 'pr',
+      prId: prId,
+      filesReviewed: filesToReview.length,
+      reviewFocus: config.reviewTypes.join(', '),
+      commentId: commentResponse?.id
+    });
     
   } catch (error) {
     console.error('[PR] Error:', error);
@@ -162,8 +173,25 @@ async function handlePushWithConfig(payload, config) {
           !repositoryConfigs.shouldSkipPath(repoSlug, file.path)
         );
         
+        // 디버깅: 필터링 전후 파일 수 로그
+        console.log(`[PUSH] Files before filtering: ${files.length}`);
+        console.log(`[PUSH] Files after filtering: ${filesToReview.length}`);
+        
+        if (files.length > 0) {
+          console.log('[PUSH] Sample files filtered out:', 
+            files.filter(f => !filesToReview.includes(f))
+                 .slice(0, 5)
+                 .map(f => f.path));
+        }
+        
         if (filesToReview.length === 0) {
           console.log('[PUSH] No files to review after filtering');
+          logger.warning('All files filtered out', {
+            repository: repoSlug,
+            commit: commitHash.substring(0, 7),
+            totalFiles: files.length,
+            filteredFiles: 0
+          });
           continue;
         }
         
@@ -174,21 +202,49 @@ async function handlePushWithConfig(payload, config) {
         let comment = `## 🤖 Automated Code Review\n\n`;
         comment += `**Repository**: ${repoSlug}\n`;
         comment += `**Commit**: ${commitHash.substring(0, 7)}\n`;
-        comment += `**Review Focus**: ${config.reviewTypes.join(', ')}\n\n`;
+        comment += `**Review Focus**: ${config.reviewTypes.join(', ')}\n`;
+        comment += `**Files Reviewed**: ${filesToReview.length}\n\n`;
         
-        for (const file of filesToReview) {
-          const review = await codeReviewer.reviewCode(
-            file.diff,
-            file.path,
-            change.new.target.message,
-            customPrompt
-          );
-          comment += `### 📄 ${file.path}\n${review}\n\n`;
+        console.log(`[PUSH] Starting review for ${filesToReview.length} files`);
+        
+        for (let i = 0; i < filesToReview.length; i++) {
+          const file = filesToReview[i];
+          console.log(`[PUSH] Reviewing file ${i+1}/${filesToReview.length}: ${file.path}`);
+          
+          try {
+            const review = await codeReviewer.reviewCode(
+              file.diff,
+              file.path,
+              change.new.target.message,
+              customPrompt
+            );
+            comment += `### 📄 ${file.path}\n${review}\n\n`;
+          } catch (reviewError) {
+            console.error(`[PUSH] Failed to review file ${file.path}:`, reviewError.message);
+            logger.error('File review failed', {
+              file: file.path,
+              error: reviewError.message,
+              commit: commitHash.substring(0, 7)
+            });
+            // Continue with other files even if one fails
+            comment += `### 📄 ${file.path}\n⚠️ Review failed: ${reviewError.message}\n\n`;
+          }
         }
         
         try {
-          await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
+          const commentResponse = await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
           console.log(`[PUSH] Review posted for commit ${commitHash.substring(0, 7)}`);
+          
+          // Send Slack notification
+          await slackNotifier.sendCodeReviewNotification({
+            repoSlug: repoSlug,
+            type: 'commit',
+            commitHash: commitHash,
+            filesReviewed: filesToReview.length,
+            reviewFocus: config.reviewTypes.join(', '),
+            commentId: commentResponse?.id
+          });
+          
         } catch (commentError) {
           // 댓글 작성 실패 시 캐시에서 제거 (재시도 가능하도록)
           processedCommitsCache.remove(repoSlug, commitHash);
@@ -197,6 +253,14 @@ async function handlePushWithConfig(payload, config) {
             repository: repoSlug,
             error: commentError.message
           });
+          
+          // Send error notification to Slack
+          await slackNotifier.sendErrorNotification({
+            repoSlug: repoSlug,
+            error: commentError.message,
+            context: `Failed to post comment for commit ${commitHash.substring(0, 7)}`
+          });
+          
           throw commentError;
         }
       } catch (error) {

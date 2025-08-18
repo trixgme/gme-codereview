@@ -4,7 +4,9 @@ const helmet = require('helmet');
 require('dotenv').config();
 
 const webhookRoutes = require('./routes/webhook');
+const multiRepoWebhookRoutes = require('./routes/multiRepoWebhook');
 const logsRoutes = require('./routes/logs');
+const slackTestRoutes = require('./routes/slackTest');
 const logger = require('./utils/logger');
 
 const app = express();
@@ -66,13 +68,17 @@ app.get('/', (req, res) => {
       webhook: '/webhook/bitbucket',
       health: '/health',
       logs: '/logs',
-      logStats: '/logs/stats'
+      logStats: '/logs/stats',
+      slackTest: '/slack/test',
+      slackSample: '/slack/sample'
     }
   });
 });
 
 app.use('/webhook', webhookRoutes);
+app.use('/multi-webhook', multiRepoWebhookRoutes);
 app.use('/logs', logsRoutes);
+app.use('/slack', slackTestRoutes);
 
 app.use((err, req, res, next) => {
   console.error('Error:', err);

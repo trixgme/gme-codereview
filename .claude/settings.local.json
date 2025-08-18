@@ -10,7 +10,9 @@
       "WebSearch",
       "Bash(grep:*)",
       "Bash(git add:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)"
     ],
     "deny": [],
     "ask": [],

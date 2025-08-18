@@ -196,6 +196,16 @@ class BitbucketClient {
     const endpoint = `${this.baseURL}/repositories/${this.workspace}/${repoSlug}/commit/${commitHash}/comments`;
     
     try {
+      console.log(`[BITBUCKET] Posting comment to: ${endpoint}`);
+      console.log(`[BITBUCKET] Comment length: ${content.length} characters`);
+      
+      // Bitbucket comment size limit check
+      const MAX_COMMENT_SIZE = 32768; // 32KB limit for Bitbucket comments
+      if (content.length > MAX_COMMENT_SIZE) {
+        console.warn(`[BITBUCKET] Comment too large (${content.length} > ${MAX_COMMENT_SIZE}), truncating...`);
+        content = content.substring(0, MAX_COMMENT_SIZE - 100) + '\n\n... (truncated due to size limit)';
+      }
+      
       logger.debug(`Posting commit comment`, { repoSlug, commitHash, contentLength: content.length });
       
       const response = await axios.post(
@@ -209,20 +219,29 @@ class BitbucketClient {
       );
       
       const responseTime = Date.now() - startTime;
+      console.log(`[BITBUCKET] Comment posted successfully in ${responseTime}ms`);
       logger.apiCall('Bitbucket', 'postCommitComment', true, responseTime);
       logger.success(`Posted comment to commit ${commitHash.substring(0, 7)}`, { repoSlug, commitHash });
       
       return response.data;
     } catch (error) {
       const responseTime = Date.now() - startTime;
+      console.error(`[BITBUCKET] Failed to post comment:`, {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        message: error.message,
+        data: error.response?.data
+      });
+      
       logger.apiCall('Bitbucket', 'postCommitComment', false, responseTime);
       logger.error('Error posting commit comment', {
         error: error.message,
         status: error.response?.status,
+        responseData: error.response?.data,
         repoSlug,
         commitHash
       });
-      throw new Error(`Failed to post commit comment: ${error.message}`);
+      throw new Error(`Failed to post commit comment: ${error.message} (Status: ${error.response?.status})`);
     }
   }
 
