@@ -131,6 +131,66 @@ class BitbucketClient {
     }
   }
 
+  async getCommitComments(repoSlug, commitHash) {
+    const startTime = Date.now();
+    const endpoint = `${this.baseURL}/repositories/${this.workspace}/${repoSlug}/commit/${commitHash}/comments`;
+    
+    try {
+      logger.debug(`Fetching commit comments`, { repoSlug, commitHash });
+      
+      const response = await axios.get(endpoint, { auth: this.auth });
+      
+      const responseTime = Date.now() - startTime;
+      logger.apiCall('Bitbucket', 'getCommitComments', true, responseTime);
+      
+      return response.data.values || [];
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      logger.apiCall('Bitbucket', 'getCommitComments', false, responseTime);
+      
+      // 404는 댓글이 없는 경우일 수 있으므로 빈 배열 반환
+      if (error.response?.status === 404) {
+        logger.debug('No comments found for commit', { repoSlug, commitHash });
+        return [];
+      }
+      
+      logger.error('Error fetching commit comments', {
+        error: error.message,
+        status: error.response?.status,
+        repoSlug,
+        commitHash
+      });
+      throw new Error(`Failed to fetch commit comments: ${error.message}`);
+    }
+  }
+
+  async hasAutomatedReview(repoSlug, commitHash) {
+    try {
+      const comments = await this.getCommitComments(repoSlug, commitHash);
+      
+      // 자동 리뷰 댓글이 있는지 확인 (봇이 작성한 댓글 찾기)
+      const hasReview = comments.some(comment => {
+        const content = comment.content?.raw || '';
+        return content.includes('🤖 Automated Code Review') || 
+               content.includes('This review was generated automatically');
+      });
+      
+      if (hasReview) {
+        logger.info(`Automated review already exists for commit ${commitHash.substring(0, 7)}`);
+      }
+      
+      return hasReview;
+    } catch (error) {
+      logger.error('Error checking for existing review', {
+        error: error.message,
+        repoSlug,
+        commitHash
+      });
+      // 에러 시에는 안전하게 false 반환 (리뷰 진행)
+      return false;
+    }
+  }
+
   async postCommitComment(repoSlug, commitHash, content) {
     const startTime = Date.now();
     const endpoint = `${this.baseURL}/repositories/${this.workspace}/${repoSlug}/commit/${commitHash}/comments`;

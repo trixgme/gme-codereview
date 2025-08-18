@@ -4,6 +4,7 @@ const codeReviewer = require('../utils/codeReviewer');
 const bitbucketClient = require('../utils/bitbucketClient');
 const repositoryConfigs = require('../config/repositories');
 const logger = require('../utils/logger');
+const processedCommitsCache = require('../utils/processedCommitsCache');
 
 router.post('/bitbucket/:workspace?', async (req, res) => {
   const startTime = Date.now();
@@ -121,19 +122,35 @@ async function handlePushWithConfig(payload, config) {
     return;
   }
   
-  // Track processed commits to avoid duplicates
-  const processedCommits = new Set();
-  
   for (const change of push.changes) {
     if (change.new && (change.new.type === 'commit' || change.new.type === 'branch')) {
       const commitHash = change.new.target.hash;
       
-      // Skip if we've already processed this commit
-      if (processedCommits.has(commitHash)) {
-        console.log('[PUSH] Skipping duplicate commit:', commitHash.substring(0, 7));
+      // 1. 전역 캐시 확인
+      if (processedCommitsCache.has(repoSlug, commitHash)) {
+        console.log('[PUSH] Skipping commit (already in cache):', commitHash.substring(0, 7));
+        logger.info(`Skipping cached commit: ${commitHash.substring(0, 7)}`, {
+          repository: repoSlug,
+          commit: commitHash.substring(0, 7)
+        });
         continue;
       }
-      processedCommits.add(commitHash);
+      
+      // 2. Bitbucket API로 기존 댓글 확인
+      const hasExistingReview = await bitbucketClient.hasAutomatedReview(repoSlug, commitHash);
+      if (hasExistingReview) {
+        console.log('[PUSH] Skipping commit (review already exists):', commitHash.substring(0, 7));
+        logger.info(`Skipping commit with existing review: ${commitHash.substring(0, 7)}`, {
+          repository: repoSlug,
+          commit: commitHash.substring(0, 7)
+        });
+        // 캐시에 추가하여 다음 요청 시 빠르게 스킵
+        processedCommitsCache.add(repoSlug, commitHash);
+        continue;
+      }
+      
+      // 3. 캐시에 즉시 추가 (동시 요청 방지)
+      processedCommitsCache.add(repoSlug, commitHash);
       
       try {
         // Get commit diff
@@ -169,10 +186,22 @@ async function handlePushWithConfig(payload, config) {
           comment += `### 📄 ${file.path}\n${review}\n\n`;
         }
         
-        await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
-        console.log(`[PUSH] Review posted for commit ${commitHash.substring(0, 7)}`);
-        
+        try {
+          await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
+          console.log(`[PUSH] Review posted for commit ${commitHash.substring(0, 7)}`);
+        } catch (commentError) {
+          // 댓글 작성 실패 시 캐시에서 제거 (재시도 가능하도록)
+          processedCommitsCache.remove(repoSlug, commitHash);
+          logger.error('Failed to post comment, removed from cache', {
+            commit: commitHash.substring(0, 7),
+            repository: repoSlug,
+            error: commentError.message
+          });
+          throw commentError;
+        }
       } catch (error) {
+        // 전체 처리 실패 시 캐시에서 제거
+        processedCommitsCache.remove(repoSlug, commitHash);
         console.error('[PUSH] Error:', error);
         throw error;
       }

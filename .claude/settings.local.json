@@ -9,7 +9,8 @@
       "WebFetch(domain:platform.openai.com)",
       "WebSearch",
       "Bash(grep:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": [],

@@ -3,6 +3,7 @@ const router = express.Router();
 const codeReviewer = require('../utils/codeReviewer');
 const bitbucketClient = require('../utils/bitbucketClient');
 const logger = require('../utils/logger');
+const processedCommitsCache = require('../utils/processedCommitsCache');
 const { validateWebhookSignature, parseWebhookPayload } = require('../middlewares/webhookValidator');
 
 router.post('/bitbucket', 
@@ -158,9 +159,6 @@ async function handlePush(payload) {
       return;
     }
     
-    // Track processed commits to avoid duplicates
-    const processedCommits = new Set();
-    
     for (const change of push.changes) {
       console.log('[HANDLE_PUSH] Processing change:', JSON.stringify(change, null, 2));
       console.log('[HANDLE_PUSH] Change type:', change?.new?.type);
@@ -170,12 +168,31 @@ async function handlePush(payload) {
         const commitHash = change.new.target.hash;
         const commitMessage = change.new.target.message;
         
-        // Skip if we've already processed this commit
-        if (processedCommits.has(commitHash)) {
-          console.log('[HANDLE_PUSH] Skipping duplicate commit:', commitHash.substring(0, 7));
+        // 1. 전역 캐시 확인
+        if (processedCommitsCache.has(repoSlug, commitHash)) {
+          console.log('[HANDLE_PUSH] Skipping commit (already in cache):', commitHash.substring(0, 7));
+          logger.info(`Skipping cached commit: ${commitHash.substring(0, 7)}`, {
+            repository: repoSlug,
+            commit: commitHash.substring(0, 7)
+          });
           continue;
         }
-        processedCommits.add(commitHash);
+        
+        // 2. Bitbucket API로 기존 댓글 확인
+        const hasExistingReview = await bitbucketClient.hasAutomatedReview(repoSlug, commitHash);
+        if (hasExistingReview) {
+          console.log('[HANDLE_PUSH] Skipping commit (review already exists):', commitHash.substring(0, 7));
+          logger.info(`Skipping commit with existing review: ${commitHash.substring(0, 7)}`, {
+            repository: repoSlug,
+            commit: commitHash.substring(0, 7)
+          });
+          // 캐시에 추가하여 다음 요청 시 빠르게 스킵
+          processedCommitsCache.add(repoSlug, commitHash);
+          continue;
+        }
+        
+        // 3. 캐시에 즉시 추가 (동시 요청 방지)
+        processedCommitsCache.add(repoSlug, commitHash);
         
         console.log('[HANDLE_PUSH] Processing commit:', commitHash.substring(0, 7));
         console.log('[HANDLE_PUSH] Commit message:', commitMessage);
@@ -254,13 +271,24 @@ async function handlePush(payload) {
 
         comment += `---\n*This review was generated automatically by AI.*`;
 
-        await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
-        
-        logger.success(`Successfully posted review for commit ${commitHash.substring(0, 7)}`, {
-          commit: commitHash.substring(0, 7),
-          repository: repoSlug,
-          filesReviewed: files.length
-        });
+        try {
+          await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
+          
+          logger.success(`Successfully posted review for commit ${commitHash.substring(0, 7)}`, {
+            commit: commitHash.substring(0, 7),
+            repository: repoSlug,
+            filesReviewed: files.length
+          });
+        } catch (commentError) {
+          // 댓글 작성 실패 시 캐시에서 제거 (재시도 가능하도록)
+          processedCommitsCache.remove(repoSlug, commitHash);
+          logger.error('Failed to post comment, removed from cache', {
+            commit: commitHash.substring(0, 7),
+            repository: repoSlug,
+            error: commentError.message
+          });
+          throw commentError;
+        }
       }
     }
     
