@@ -4,6 +4,7 @@ const codeReviewer = require('../utils/codeReviewer');
 const bitbucketClient = require('../utils/bitbucketClient');
 const logger = require('../utils/logger');
 const processedCommitsCache = require('../utils/processedCommitsCache');
+const slackNotifier = require('../utils/slackNotifier');
 const { validateWebhookSignature, parseWebhookPayload } = require('../middlewares/webhookValidator');
 
 router.post('/bitbucket', 
@@ -113,7 +114,7 @@ async function handlePullRequest(payload) {
 
     comment += `---\n*This review was generated automatically by AI.*`;
 
-    await bitbucketClient.postPullRequestComment(repoSlug, prId, comment);
+    const commentResponse = await bitbucketClient.postPullRequestComment(repoSlug, prId, comment);
     
     const processingTime = Date.now() - startTime;
     logger.success(`Successfully posted review for PR #${prId}`, {
@@ -121,6 +122,16 @@ async function handlePullRequest(payload) {
       repository: repoSlug,
       filesReviewed: files.length,
       processingTime: `${processingTime}ms`
+    });
+    
+    // Send Slack notification
+    await slackNotifier.sendCodeReviewNotification({
+      repoSlug,
+      type: 'pr',
+      prId,
+      filesReviewed: files.length,
+      reviewFocus: 'Code quality, bugs, security, and performance',
+      commentId: commentResponse?.id
     });
   } catch (error) {
     const processingTime = Date.now() - startTime;
@@ -281,12 +292,22 @@ async function handlePush(payload) {
         comment += `---\n*This review was generated automatically by AI.*`;
 
         try {
-          await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
+          const commentResponse = await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
           
           logger.success(`Successfully posted review for commit ${commitHash.substring(0, 7)}`, {
             commit: commitHash.substring(0, 7),
             repository: repoSlug,
             filesReviewed: files.length
+          });
+          
+          // Send Slack notification
+          await slackNotifier.sendCodeReviewNotification({
+            repoSlug,
+            type: 'commit',
+            commitHash,
+            filesReviewed: files.length,
+            reviewFocus: 'Code quality, bugs, security, and performance',
+            commentId: commentResponse?.id
           });
         } catch (commentError) {
           // 댓글 작성 실패 시 캐시에서 제거 (재시도 가능하도록)
@@ -356,12 +377,22 @@ async function handlePush(payload) {
             
             comment += `---\n*This review was generated automatically by AI.*`;
             
-            await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
+            const commentResponse = await bitbucketClient.postCommitComment(repoSlug, commitHash, comment);
             
             logger.success(`Successfully posted review for commit ${commitHash.substring(0, 7)}`, {
               commit: commitHash.substring(0, 7),
               repository: repoSlug,
               filesReviewed: files.length
+            });
+            
+            // Send Slack notification
+            await slackNotifier.sendCodeReviewNotification({
+              repoSlug,
+              type: 'commit',
+              commitHash,
+              filesReviewed: files.length,
+              reviewFocus: 'Code quality, bugs, security, and performance',
+              commentId: commentResponse?.id
             });
           } catch (error) {
             processedCommitsCache.remove(repoSlug, commitHash);
