@@ -69,7 +69,10 @@ async function handlePullRequestWithConfig(payload, config) {
   const { pullrequest, repository } = payload;
   const repoSlug = repository.name;
   const prId = pullrequest.id;
-  const authorName = pullrequest.author?.display_name || pullrequest.author?.nickname || 'unknown';
+  const authorName = pullrequest.author?.display_name || 
+                     pullrequest.author?.nickname || 
+                     pullrequest.author?.raw?.match(/(.*?)\s*</)?.[1] || 
+                     'unknown';
   
   console.log(`[PR] Processing PR #${prId} for ${repoSlug} by ${authorName} with config:`, config);
   
@@ -213,7 +216,7 @@ async function handlePushWithConfig(payload, config) {
         
         if (filesToReview.length === 0) {
           console.log('[PUSH] No files to review after filtering');
-          logger.warning('All files filtered out', {
+          logger.warn('All files filtered out', {
             repository: repoSlug,
             commit: commitHash.substring(0, 7),
             totalFiles: files.length,

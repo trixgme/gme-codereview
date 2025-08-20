@@ -82,7 +82,7 @@ class BatchProcessor {
       
       // Check if we're approaching timeout
       if (elapsed > timeout) {
-        logger.warning(`Approaching timeout, stopping at file ${i}/${files.length}`, {
+        logger.warn(`Approaching timeout, stopping at file ${i}/${files.length}`, {
           elapsed,
           timeout,
           filesProcessed: i,
