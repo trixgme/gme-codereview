@@ -43,8 +43,8 @@ Be constructive, specific, and always provide actionable solutions.`;
   async reviewCode(diff, filePath, commitMessage, authorName = null) {
     try {
       // GPT-5 can handle up to 272,000 input tokens (~1,088,000 characters)
-      // We'll use 50,000 characters for faster processing in Vercel
-      const MAX_DIFF_SIZE = 50000;  // ~12,500 tokens for diff alone
+      // We'll use 200,000 characters to leave room for system prompt and response
+      const MAX_DIFF_SIZE = 200000;  // ~50,000 tokens for diff alone
       let truncatedDiff = diff;
       let wasTruncated = false;
       
@@ -82,8 +82,9 @@ Please review this code change.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        // Reduce tokens for faster response in Vercel
-        max_completion_tokens: 4000  // Balanced analysis per file
+        // GPT-5 supports up to 128,000 output tokens
+        // We'll request maximum analysis depth
+        max_completion_tokens: 32000  // Allow very detailed analysis per file
       });
 
       return response.choices[0].message.content;
@@ -168,7 +169,7 @@ Provide an EXTREMELY DETAILED analysis including:
  },
           { role: 'user', content: summaryPrompt }
         ],
-        max_completion_tokens: 8000  // Balanced PR summary
+        max_completion_tokens: 16000  // Allow comprehensive PR summary
       });
 
       return {

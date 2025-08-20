@@ -4,6 +4,7 @@ const codeReviewer = require('../utils/codeReviewer');
 const bitbucketClient = require('../utils/bitbucketClient');
 const developerConfigs = require('../config/developerConfigs');
 const logger = require('../utils/logger');
+const BatchProcessor = require('../utils/batchProcessor');
 const processedCommitsCache = require('../utils/processedCommitsCache');
 const slackNotifier = require('../utils/slackNotifier');
 const { validateWebhookSignature, parseWebhookPayload } = require('../middlewares/webhookValidator');
@@ -276,11 +277,9 @@ async function handlePush(payload) {
           continue;
         }
         
-        // Process ALL files sequentially for thorough analysis
-        let fileIndex = 0;
-        for (const file of files) {
-          fileIndex++;
-          logger.info(`Reviewing file ${fileIndex}/${files.length}: ${file.path}`);
+        // Process files with timeout protection
+        const reviewProcessor = async (file, index) => {
+          logger.info(`Reviewing file ${index + 1}/${files.length}: ${file.path}`);
           
           const startTime = Date.now();
           const review = await codeReviewer.reviewCode(
@@ -292,10 +291,42 @@ async function handlePush(payload) {
           
           const reviewTime = Date.now() - startTime;
           
-          comment += `### 📄 [${fileIndex}/${files.length}] ${file.path}\n`;
-          comment += `*Review time: ${(reviewTime/1000).toFixed(1)}s*\n\n`;
-          comment += `${review}\n\n`;
-          comment += `---\n\n`;
+          return {
+            path: file.path,
+            review: review,
+            time: reviewTime,
+            index: index + 1
+          };
+        };
+        
+        // Process with timeout protection (280 seconds to leave buffer)
+        const { processed, unprocessed, totalTime } = await BatchProcessor.processWithTimeout(
+          files,
+          reviewProcessor,
+          280000
+        );
+        
+        // Add processed reviews to comment
+        for (const result of processed) {
+          if (result.error) {
+            comment += `### 📄 ${result.file}\n`;
+            comment += `⚠️ Review failed: ${result.error}\n\n`;
+          } else {
+            comment += `### 📄 [${result.index}/${files.length}] ${result.path}\n`;
+            comment += `*Review time: ${(result.time/1000).toFixed(1)}s*\n\n`;
+            comment += `${result.review}\n\n`;
+            comment += `---\n\n`;
+          }
+        }
+        
+        // Add note about unprocessed files if any
+        if (unprocessed.length > 0) {
+          comment += `\n⚠️ **Timeout Notice**: ${unprocessed.length} files were not reviewed due to time constraints.\n`;
+          comment += `Unreviewed files:\n`;
+          for (const file of unprocessed) {
+            comment += `- ${file.path}\n`;
+          }
+          comment += `\n`;
         }
 
         comment += `---\n*This review was generated automatically by AI.*`;
