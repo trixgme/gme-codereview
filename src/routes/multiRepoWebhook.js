@@ -153,11 +153,15 @@ async function handlePushWithConfig(payload, config) {
   const repoSlug = repository.name;
   
   console.log(`[PUSH] Processing push for ${repoSlug} with config:`, config);
+  console.log(`[PUSH] Number of changes in push:`, push?.changes?.length || 0);
   
   if (!push?.changes || push.changes.length === 0) {
     console.log('[PUSH] No changes found');
     return;
   }
+  
+  // 중복 커밋 제거를 위한 Set 사용
+  const processedInThisPush = new Set();
   
   for (const change of push.changes) {
     if (change.new && (change.new.type === 'commit' || change.new.type === 'branch')) {
@@ -166,7 +170,14 @@ async function handlePushWithConfig(payload, config) {
                         change.new.target.author?.raw?.match(/(.*?)\s*</)?.[1] || 
                         'unknown';
       
-      console.log(`[PUSH] Commit by ${authorName}`);
+      console.log(`[PUSH] Processing change for commit: ${commitHash.substring(0, 7)} by ${authorName}`);
+      
+      // 이번 푸시에서 이미 처리한 커밋인지 확인
+      if (processedInThisPush.has(commitHash)) {
+        console.log(`[PUSH] Skipping duplicate commit in same push: ${commitHash.substring(0, 7)}`);
+        continue;
+      }
+      processedInThisPush.add(commitHash);
       
       // 1. 처리 시작 시도 (이미 처리 중이거나 완료된 경우 false 반환)
       if (!processedCommitsCache.startProcessing(repoSlug, commitHash)) {

@@ -173,6 +173,11 @@ async function handlePush(payload) {
       return;
     }
     
+    console.log('[HANDLE_PUSH] Number of changes in push:', push.changes.length);
+    
+    // 중복 커밋 제거를 위한 Set 사용
+    const processedInThisPush = new Set();
+    
     for (const change of push.changes) {
       console.log('[HANDLE_PUSH] Processing change:', JSON.stringify(change, null, 2));
       console.log('[HANDLE_PUSH] Change new:', change?.new);
@@ -195,7 +200,14 @@ async function handlePush(payload) {
                           change.new.target.author?.raw?.match(/(.*?)\s*</)?.[1] || 
                           'unknown';
         
-        console.log('[HANDLE_PUSH] Commit author:', authorName);
+        console.log('[HANDLE_PUSH] Processing commit:', commitHash.substring(0, 7), 'by', authorName);
+        
+        // 이번 푸시에서 이미 처리한 커밋인지 확인
+        if (processedInThisPush.has(commitHash)) {
+          console.log(`[HANDLE_PUSH] Skipping duplicate commit in same push: ${commitHash.substring(0, 7)}`);
+          continue;
+        }
+        processedInThisPush.add(commitHash);
         
         // 1. 처리 시작 시도 (이미 처리 중이거나 완료된 경우 false 반환)
         if (!processedCommitsCache.startProcessing(repoSlug, commitHash)) {
@@ -372,9 +384,14 @@ async function handlePush(payload) {
                             commit.author?.raw?.match(/(.*?)\s*</)?.[1] || 
                             'unknown';
           
-          console.log('[HANDLE_PUSH] Commit author (from array):', authorName);
+          console.log('[HANDLE_PUSH] Processing commit from array:', commitHash.substring(0, 7), 'by', authorName);
           
-          console.log('[HANDLE_PUSH] Processing commit from array:', commitHash.substring(0, 7));
+          // 이번 푸시에서 이미 처리한 커밋인지 확인
+          if (processedInThisPush.has(commitHash)) {
+            console.log(`[HANDLE_PUSH] Skipping duplicate commit in same push: ${commitHash.substring(0, 7)}`);
+            continue;
+          }
+          processedInThisPush.add(commitHash);
           
           // 처리 시작 시도 (이미 처리 중이거나 완료된 경우 false 반환)
           if (!processedCommitsCache.startProcessing(repoSlug, commitHash)) {
