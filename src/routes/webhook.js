@@ -197,10 +197,10 @@ async function handlePush(payload) {
         
         console.log('[HANDLE_PUSH] Commit author:', authorName);
         
-        // 1. 전역 캐시 확인
-        if (processedCommitsCache.has(repoSlug, commitHash)) {
-          console.log('[HANDLE_PUSH] Skipping commit (already in cache):', commitHash.substring(0, 7));
-          logger.info(`Skipping cached commit: ${commitHash.substring(0, 7)}`, {
+        // 1. 처리 시작 시도 (이미 처리 중이거나 완료된 경우 false 반환)
+        if (!processedCommitsCache.startProcessing(repoSlug, commitHash)) {
+          console.log('[HANDLE_PUSH] Skipping commit (already processing or cached):', commitHash.substring(0, 7));
+          logger.info(`Skipping commit (duplicate request): ${commitHash.substring(0, 7)}`, {
             repository: repoSlug,
             commit: commitHash.substring(0, 7)
           });
@@ -215,13 +215,10 @@ async function handlePush(payload) {
             repository: repoSlug,
             commit: commitHash.substring(0, 7)
           });
-          // 캐시에 추가하여 다음 요청 시 빠르게 스킵
-          processedCommitsCache.add(repoSlug, commitHash);
+          // 처리 완료로 표시
+          processedCommitsCache.completeProcessing(repoSlug, commitHash);
           continue;
         }
-        
-        // 3. 캐시에 즉시 추가 (동시 요청 방지)
-        processedCommitsCache.add(repoSlug, commitHash);
         
         console.log('[HANDLE_PUSH] Processing commit:', commitHash.substring(0, 7));
         console.log('[HANDLE_PUSH] Commit message:', commitMessage);
@@ -350,6 +347,9 @@ async function handlePush(payload) {
             commentId: commentResponse?.id,
             authorName
           });
+          
+          // 처리 완료로 표시
+          processedCommitsCache.completeProcessing(repoSlug, commitHash);
         } catch (commentError) {
           // 댓글 작성 실패 시 캐시에서 제거 (재시도 가능하도록)
           processedCommitsCache.remove(repoSlug, commitHash);
@@ -376,20 +376,18 @@ async function handlePush(payload) {
           
           console.log('[HANDLE_PUSH] Processing commit from array:', commitHash.substring(0, 7));
           
-          // Check cache and process similar to above
-          if (processedCommitsCache.has(repoSlug, commitHash)) {
-            console.log('[HANDLE_PUSH] Skipping commit (already in cache):', commitHash.substring(0, 7));
+          // 처리 시작 시도 (이미 처리 중이거나 완료된 경우 false 반환)
+          if (!processedCommitsCache.startProcessing(repoSlug, commitHash)) {
+            console.log('[HANDLE_PUSH] Skipping commit (already processing or cached):', commitHash.substring(0, 7));
             continue;
           }
           
           const hasExistingReview = await bitbucketClient.hasAutomatedReview(repoSlug, commitHash);
           if (hasExistingReview) {
             console.log('[HANDLE_PUSH] Skipping commit (review already exists):', commitHash.substring(0, 7));
-            processedCommitsCache.add(repoSlug, commitHash);
+            processedCommitsCache.completeProcessing(repoSlug, commitHash);
             continue;
           }
-          
-          processedCommitsCache.add(repoSlug, commitHash);
           
           // Process diff and review
           try {
@@ -443,6 +441,9 @@ async function handlePush(payload) {
               commentId: commentResponse?.id,
               authorName
             });
+            
+            // 처리 완료로 표시
+            processedCommitsCache.completeProcessing(repoSlug, commitHash);
           } catch (error) {
             processedCommitsCache.remove(repoSlug, commitHash);
             logger.error('Failed to process commit from array', {

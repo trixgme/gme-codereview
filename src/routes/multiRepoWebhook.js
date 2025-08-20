@@ -168,10 +168,10 @@ async function handlePushWithConfig(payload, config) {
       
       console.log(`[PUSH] Commit by ${authorName}`);
       
-      // 1. 전역 캐시 확인
-      if (processedCommitsCache.has(repoSlug, commitHash)) {
-        console.log('[PUSH] Skipping commit (already in cache):', commitHash.substring(0, 7));
-        logger.info(`Skipping cached commit: ${commitHash.substring(0, 7)}`, {
+      // 1. 처리 시작 시도 (이미 처리 중이거나 완료된 경우 false 반환)
+      if (!processedCommitsCache.startProcessing(repoSlug, commitHash)) {
+        console.log('[PUSH] Skipping commit (already processing or cached):', commitHash.substring(0, 7));
+        logger.info(`Skipping commit (duplicate request): ${commitHash.substring(0, 7)}`, {
           repository: repoSlug,
           commit: commitHash.substring(0, 7)
         });
@@ -186,13 +186,10 @@ async function handlePushWithConfig(payload, config) {
           repository: repoSlug,
           commit: commitHash.substring(0, 7)
         });
-        // 캐시에 추가하여 다음 요청 시 빠르게 스킵
-        processedCommitsCache.add(repoSlug, commitHash);
+        // 처리 완료로 표시
+        processedCommitsCache.completeProcessing(repoSlug, commitHash);
         continue;
       }
-      
-      // 3. 캐시에 즉시 추가 (동시 요청 방지)
-      processedCommitsCache.add(repoSlug, commitHash);
       
       try {
         // Get commit diff
@@ -300,6 +297,9 @@ async function handlePushWithConfig(payload, config) {
             commentId: commentResponse?.id,
             authorName: authorName
           });
+          
+          // 처리 완료로 표시
+          processedCommitsCache.completeProcessing(repoSlug, commitHash);
           
         } catch (commentError) {
           // 댓글 작성 실패 시 캐시에서 제거 (재시도 가능하도록)
