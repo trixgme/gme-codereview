@@ -24,6 +24,7 @@ class SlackNotifier {
    * @param {number} params.filesReviewed - Number of files reviewed
    * @param {string} params.reviewFocus - Review focus areas
    * @param {string} params.commentId - Bitbucket comment ID (optional)
+   * @param {string} params.authorName - Author of the commit or PR
    */
   async sendCodeReviewNotification(params) {
     if (!this.enabled) {
@@ -38,7 +39,8 @@ class SlackNotifier {
       prId,
       filesReviewed,
       reviewFocus,
-      commentId
+      commentId,
+      authorName
     } = params;
 
     try {
@@ -90,7 +92,20 @@ class SlackNotifier {
               },
               {
                 type: 'mrkdwn',
+                text: `*Author:*\n${authorName || 'Unknown'}`
+              }
+            ]
+          },
+          {
+            type: 'section',
+            fields: [
+              {
+                type: 'mrkdwn',
                 text: `*Files Reviewed:*\n${filesReviewed}`
+              },
+              {
+                type: 'mrkdwn',
+                text: `*Review Language:*\n${['Eugene', 'fred', '한세희(Trix)'].includes(authorName) ? '🇰🇷 Korean' : '🇺🇸 English'}`
               }
             ]
           }

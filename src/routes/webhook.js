@@ -347,7 +347,8 @@ async function handlePush(payload) {
             commitHash,
             filesReviewed: files.length,
             reviewFocus: 'Code quality, bugs, security, and performance',
-            commentId: commentResponse?.id
+            commentId: commentResponse?.id,
+            authorName
           });
         } catch (commentError) {
           // 댓글 작성 실패 시 캐시에서 제거 (재시도 가능하도록)
@@ -439,7 +440,8 @@ async function handlePush(payload) {
               commitHash,
               filesReviewed: files.length,
               reviewFocus: 'Code quality, bugs, security, and performance',
-              commentId: commentResponse?.id
+              commentId: commentResponse?.id,
+              authorName
             });
           } catch (error) {
             processedCommitsCache.remove(repoSlug, commitHash);

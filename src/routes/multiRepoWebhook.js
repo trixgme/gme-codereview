@@ -138,7 +138,8 @@ async function handlePullRequestWithConfig(payload, config) {
       prId: prId,
       filesReviewed: filesToReview.length,
       reviewFocus: config.reviewTypes.join(', '),
-      commentId: commentResponse?.id
+      commentId: commentResponse?.id,
+      authorName: authorName
     });
     
   } catch (error) {
@@ -296,7 +297,8 @@ async function handlePushWithConfig(payload, config) {
             commitHash: commitHash,
             filesReviewed: filesToReview.length,
             reviewFocus: config.reviewTypes.join(', '),
-            commentId: commentResponse?.id
+            commentId: commentResponse?.id,
+            authorName: authorName
           });
           
         } catch (commentError) {
