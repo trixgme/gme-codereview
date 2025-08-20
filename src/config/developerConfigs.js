@@ -31,6 +31,42 @@ const developerConfigs = {
         includeCodeExamples: true,
         focusAreas: ['버그', '보안', '성능', '코드 품질']
       }
+    },
+    
+    // 한세희(Trix) - 한글 리뷰 (정확한 이름 매칭만)
+    '한세희(Trix)': {
+      reviewLanguage: 'ko',
+      enableReview: true,
+      notifyOnReview: true,
+      preferences: {
+        detailLevel: 'high',
+        includeCodeExamples: true,
+        focusAreas: ['버그', '보안', '성능', '코드 품질']
+      }
+    },
+    
+    // Trix - 한글 리뷰 (별칭)
+    'Trix': {
+      reviewLanguage: 'ko',
+      enableReview: true,
+      notifyOnReview: true,
+      preferences: {
+        detailLevel: 'high',
+        includeCodeExamples: true,
+        focusAreas: ['버그', '보안', '성능', '코드 품질']
+      }
+    },
+    
+    // trixh - 한글 리뷰 (Bitbucket username)
+    'trixh': {
+      reviewLanguage: 'ko',
+      enableReview: true,
+      notifyOnReview: true,
+      preferences: {
+        detailLevel: 'high',
+        includeCodeExamples: true,
+        focusAreas: ['버그', '보안', '성능', '코드 품질']
+      }
     }
   },
 

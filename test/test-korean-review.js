@@ -9,7 +9,7 @@ async function testKoreanReview() {
   console.log('1. Testing developer configuration:');
   console.log('-----------------------------------');
   
-  const testAuthors = ['Eugene', 'eugene', 'Fred', 'fred', 'John', 'Unknown Developer'];
+  const testAuthors = ['Eugene', 'eugene', 'Fred', 'fred', '한세희(Trix)', 'Trix', 'trixh', 'John', 'Unknown Developer'];
   
   for (const author of testAuthors) {
     const config = developerConfigs.getConfig(author);
@@ -81,7 +81,10 @@ async function testKoreanReview() {
     'eugene@gmeremit.com',
     'Fred Kim',
     'fred.kim',
-    'fred@gmeremit.com'
+    'fred@gmeremit.com',
+    '한세희',
+    'Trix Han',
+    'trixh@gmeremit.com'
   ];
   
   for (const variant of authorVariants) {
