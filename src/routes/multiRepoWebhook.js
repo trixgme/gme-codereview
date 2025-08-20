@@ -3,6 +3,7 @@ const router = express.Router();
 const codeReviewer = require('../utils/codeReviewer');
 const bitbucketClient = require('../utils/bitbucketClient');
 const repositoryConfigs = require('../config/repositories');
+const developerConfigs = require('../config/developerConfigs');
 const logger = require('../utils/logger');
 const processedCommitsCache = require('../utils/processedCommitsCache');
 const slackNotifier = require('../utils/slackNotifier');
@@ -68,8 +69,9 @@ async function handlePullRequestWithConfig(payload, config) {
   const { pullrequest, repository } = payload;
   const repoSlug = repository.name;
   const prId = pullrequest.id;
+  const authorName = pullrequest.author?.display_name || pullrequest.author?.nickname || 'unknown';
   
-  console.log(`[PR] Processing PR #${prId} for ${repoSlug} with config:`, config);
+  console.log(`[PR] Processing PR #${prId} for ${repoSlug} by ${authorName} with config:`, config);
   
   try {
     // Get PR diff
@@ -89,6 +91,12 @@ async function handlePullRequestWithConfig(payload, config) {
     // Generate custom review prompt
     const customPrompt = repositoryConfigs.getReviewPrompt(repoSlug);
     
+    // Get developer configuration
+    const devConfig = developerConfigs.getConfig(authorName);
+    const reviewLanguage = devConfig.reviewLanguage || 'en';
+    
+    console.log(`[PR] Using ${reviewLanguage} review for author: ${authorName}`);
+    
     // Review with custom configuration
     const reviewResult = await codeReviewer.reviewPullRequest({
       title: pullrequest.title,
@@ -96,12 +104,25 @@ async function handlePullRequestWithConfig(payload, config) {
       files: filesToReview,
       customPrompt: customPrompt,
       config: config
-    });
+    }, authorName);
     
     // Format and post comment
-    let comment = `## 🤖 Automated Code Review\n\n`;
-    comment += `**Repository**: ${repoSlug}\n`;
-    comment += `**Configuration**: ${config.reviewTypes.join(', ')}\n\n`;
+    let comment = reviewLanguage === 'ko' 
+      ? `## 🤖 자동 코드 리뷰\n\n`
+      : `## 🤖 Automated Code Review\n\n`;
+    
+    comment += reviewLanguage === 'ko'
+      ? `**저장소**: ${repoSlug}\n`
+      : `**Repository**: ${repoSlug}\n`;
+    
+    comment += reviewLanguage === 'ko'
+      ? `**리뷰어**: ${authorName}\n`
+      : `**Author**: ${authorName}\n`;
+    
+    comment += reviewLanguage === 'ko'
+      ? `**설정**: ${config.reviewTypes.join(', ')}\n\n`
+      : `**Configuration**: ${config.reviewTypes.join(', ')}\n\n`;
+    
     comment += reviewResult.summary;
     
     const commentResponse = await bitbucketClient.postPullRequestComment(repoSlug, prId, comment);
@@ -137,6 +158,11 @@ async function handlePushWithConfig(payload, config) {
   for (const change of push.changes) {
     if (change.new && (change.new.type === 'commit' || change.new.type === 'branch')) {
       const commitHash = change.new.target.hash;
+      const authorName = change.new.target.author?.user?.display_name || 
+                        change.new.target.author?.raw?.match(/(.*?)\s*</)?.[1] || 
+                        'unknown';
+      
+      console.log(`[PUSH] Commit by ${authorName}`);
       
       // 1. 전역 캐시 확인
       if (processedCommitsCache.has(repoSlug, commitHash)) {
@@ -196,15 +222,39 @@ async function handlePushWithConfig(payload, config) {
           continue;
         }
         
+        // Get developer configuration
+        const devConfig = developerConfigs.getConfig(authorName);
+        const reviewLanguage = devConfig.reviewLanguage || 'en';
+        
+        console.log(`[PUSH] Using ${reviewLanguage} review for author: ${authorName}`);
+        
         // Generate custom review prompt
         const customPrompt = repositoryConfigs.getReviewPrompt(repoSlug);
         
         // Review each file with custom configuration
-        let comment = `## 🤖 Automated Code Review\n\n`;
-        comment += `**Repository**: ${repoSlug}\n`;
-        comment += `**Commit**: ${commitHash.substring(0, 7)}\n`;
-        comment += `**Review Focus**: ${config.reviewTypes.join(', ')}\n`;
-        comment += `**Files Reviewed**: ${filesToReview.length}\n\n`;
+        let comment = reviewLanguage === 'ko'
+          ? `## 🤖 자동 코드 리뷰\n\n`
+          : `## 🤖 Automated Code Review\n\n`;
+        
+        comment += reviewLanguage === 'ko'
+          ? `**저장소**: ${repoSlug}\n`
+          : `**Repository**: ${repoSlug}\n`;
+        
+        comment += reviewLanguage === 'ko'
+          ? `**커밋**: ${commitHash.substring(0, 7)}\n`
+          : `**Commit**: ${commitHash.substring(0, 7)}\n`;
+        
+        comment += reviewLanguage === 'ko'
+          ? `**작성자**: ${authorName}\n`
+          : `**Author**: ${authorName}\n`;
+        
+        comment += reviewLanguage === 'ko'
+          ? `**리뷰 초점**: ${config.reviewTypes.join(', ')}\n`
+          : `**Review Focus**: ${config.reviewTypes.join(', ')}\n`;
+        
+        comment += reviewLanguage === 'ko'
+          ? `**검토된 파일 수**: ${filesToReview.length}\n\n`
+          : `**Files Reviewed**: ${filesToReview.length}\n\n`;
         
         console.log(`[PUSH] Starting review for ${filesToReview.length} files`);
         
@@ -217,7 +267,7 @@ async function handlePushWithConfig(payload, config) {
               file.diff,
               file.path,
               change.new.target.message,
-              customPrompt
+              authorName
             );
             comment += `### 📄 ${file.path}\n${review}\n\n`;
           } catch (reviewError) {

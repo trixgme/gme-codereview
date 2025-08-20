@@ -1,18 +1,20 @@
 
-> gme-codereview@1.0.0 dev
+> gme-codereview@1.0.0 start
 > node index.js
 
-[dotenv@17.2.1] injecting env (7) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
-[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
-[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
-[36m[2025-08-14T04:55:35.331Z] [INFO] 🚀 Code Review Bot is running on port 3000[0m
-[36m[2025-08-14T04:55:35.331Z] [INFO] Environment: production[0m
-[36m[2025-08-14T04:55:35.332Z] [INFO] Configuration Status[0m
+[dotenv@17.2.1] injecting env (24) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+[SLACK] Slack notifications enabled
+[36m[2025-08-19T01:03:57.315Z] [INFO] 🚀 Code Review Bot is running on port 3002[0m
+[36m[2025-08-19T01:03:57.315Z] [INFO] Environment: production[0m
+[36m[2025-08-19T01:03:57.316Z] [INFO] Configuration Status[0m
 Data: {
   "OpenAI API": true,
   "Bitbucket Workspace": true,
   "Bitbucket Auth": true,
-  "Webhook Secret": true
+  "Webhook Secret": true,
+  "Slack Integration": true
 }
 
 📋 Configuration Status:
@@ -20,9 +22,234 @@ Data: {
   ✅ Bitbucket Workspace
   ✅ Bitbucket Auth
   ✅ Webhook Secret
+  ✅ Slack Integration
 
-📊 Log endpoints available:
-  GET /logs - View recent logs
-  GET /logs/webhooks - View webhook logs
-  GET /logs/errors - View error logs
-  GET /logs/stats - View log statistics
+📊 Available endpoints:
+  📝 Logs:
+    GET /logs - View recent logs
+    GET /logs/webhooks - View webhook logs
+    GET /logs/errors - View error logs
+    GET /logs/stats - View log statistics
+  💬 Slack:
+    GET /slack/test - Test Slack connection
+    POST /slack/sample - Send sample notification
+[36m[2025-08-19T01:04:33.364Z] [INFO] Incoming POST /webhook/bitbucket[0m
+Data: {
+  "method": "POST",
+  "path": "/webhook/bitbucket",
+  "query": {},
+  "headers": {
+    "x-event-key": "repo:push",
+    "x-hook-uuid": "test-slack-1755565473",
+    "user-agent": "curl/8.7.1"
+  },
+  "ip": "::1"
+}
+[36m[2025-08-19T01:04:33.365Z] [INFO] Webhook received: repo:push[0m
+Data: {
+  "eventType": "repo:push",
+  "repository": "gmeandroid",
+  "workspace": "gmeremittance",
+  "push": {
+    "changes": 1
+  }
+}
+[WEBHOOK] Processing event: repo:push
+[WEBHOOK] Repository: gmeandroid
+[WEBHOOK] Workspace: gmeremittance
+[WEBHOOK] Handling push event
+[HANDLE_PUSH] Starting push handler
+[HANDLE_PUSH] Payload keys: [ 'repository', 'push' ]
+[HANDLE_PUSH] Repository: gmeandroid
+[HANDLE_PUSH] Changes count: 1
+[36m[2025-08-19T01:04:33.366Z] [INFO] Processing push event for repository: gmeandroid[0m
+Data: {
+  "repository": "gmeandroid",
+  "changes": 1
+}
+[HANDLE_PUSH] Processing change: {
+  "new": {
+    "type": "branch",
+    "name": "master",
+    "target": {
+      "type": "commit",
+      "hash": "ccb560d3cf45f2e5e6fbd09c067e637ad9e1cce4",
+      "message": "Test Slack notification"
+    }
+  }
+}
+[HANDLE_PUSH] Change new: {
+  type: 'branch',
+  name: 'master',
+  target: {
+    type: 'commit',
+    hash: 'ccb560d3cf45f2e5e6fbd09c067e637ad9e1cce4',
+    message: 'Test Slack notification'
+  }
+}
+[HANDLE_PUSH] Change old: undefined
+[HANDLE_PUSH] Change type: branch
+[31m[2025-08-19T01:04:34.198Z] [ERROR] API call to Bitbucket[0m
+Data: {
+  "service": "Bitbucket",
+  "endpoint": "getCommitComments",
+  "success": false,
+  "responseTime": "832ms"
+}
+[HANDLE_PUSH] Processing commit: ccb560d
+[HANDLE_PUSH] Commit message: Test Slack notification
+[36m[2025-08-19T01:04:34.199Z] [INFO] Processing commit: ccb560d[0m
+Data: {
+  "repository": "gmeandroid",
+  "commit": "ccb560d",
+  "message": "Test Slack notification"
+}
+[BITBUCKET] Fetching diff from: https://api.bitbucket.org/2.0/repositories/gmeremittance/gmeandroid/diff/ccb560d3cf45f2e5e6fbd09c067e637ad9e1cce4
+[BITBUCKET] Workspace: gmeremittance
+[BITBUCKET] Repo: gmeandroid
+[BITBUCKET] Commit: ccb560d3cf45f2e5e6fbd09c067e637ad9e1cce4
+[31m[2025-08-19T01:04:34.631Z] [ERROR] API call to Bitbucket[0m
+Data: {
+  "service": "Bitbucket",
+  "endpoint": "getCommitDiff",
+  "success": false,
+  "responseTime": "432ms"
+}
+[BITBUCKET] Error details:
+[BITBUCKET] Status: 404
+[BITBUCKET] Message: Request failed with status code 404
+[BITBUCKET] Response data: {
+  type: 'error',
+  error: {
+    message: 'The source or destination could not be found for spec: ccb560d3cf45f2e5e6fbd09c067e637ad9e1cce4.'
+  }
+}
+[31m[2025-08-19T01:04:34.632Z] [ERROR] Error fetching commit diff[0m
+Data: {
+  "error": "Request failed with status code 404",
+  "status": 404,
+  "repoSlug": "gmeandroid",
+  "commitHash": "ccb560d3cf45f2e5e6fbd09c067e637ad9e1cce4",
+  "workspace": "gmeremittance"
+}
+[HANDLE_PUSH] Error fetching diff: Failed to fetch commit diff: Request failed with status code 404
+[HANDLE_PUSH] Workspace: gmeremittance
+[HANDLE_PUSH] Repository: gmeandroid
+[31m[2025-08-19T01:04:34.632Z] [ERROR] Error handling push[0m
+Data: {
+  "error": "Failed to fetch commit diff: Request failed with status code 404",
+  "repository": "gmeandroid",
+  "processingTime": "1266ms"
+}
+[WEBHOOK ERROR] Full error: Error: Failed to fetch commit diff: Request failed with status code 404
+    at BitbucketClient.getCommitDiff (/Users/seiheehan/Documents/GitHub/gme-codereview/src/utils/bitbucketClient.js:95:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async handlePush (/Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:228:22)
+    at async /Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:35:11
+[WEBHOOK ERROR] Message: Failed to fetch commit diff: Request failed with status code 404
+[WEBHOOK ERROR] Stack: Error: Failed to fetch commit diff: Request failed with status code 404
+    at BitbucketClient.getCommitDiff (/Users/seiheehan/Documents/GitHub/gme-codereview/src/utils/bitbucketClient.js:95:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async handlePush (/Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:228:22)
+    at async /Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:35:11
+[31m[2025-08-19T01:04:34.632Z] [ERROR] Error processing webhook[0m
+Data: {
+  "error": "Failed to fetch commit diff: Request failed with status code 404",
+  "stack": "Error: Failed to fetch commit diff: Request failed with status code 404\n    at BitbucketClient.getCommitDiff (/Users/seiheehan/Documents/GitHub/gme-codereview/src/utils/bitbucketClient.js:95:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async handlePush (/Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:228:22)\n    at async /Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:35:11",
+  "eventType": "repo:push",
+  "responseTime": 1267
+}
+[36m[2025-08-19T01:04:34.634Z] [INFO] Response POST /bitbucket[0m
+Data: {
+  "method": "POST",
+  "path": "/bitbucket",
+  "statusCode": 200,
+  "duration": "1270ms"
+}
+[36m[2025-08-19T01:05:16.939Z] [INFO] Incoming POST /webhook/bitbucket[0m
+Data: {
+  "method": "POST",
+  "path": "/webhook/bitbucket",
+  "query": {},
+  "headers": {
+    "x-event-key": "repo:push",
+    "x-hook-uuid": "test-slack-correct-1755565516",
+    "user-agent": "curl/8.7.1"
+  },
+  "ip": "::1"
+}
+[36m[2025-08-19T01:05:16.940Z] [INFO] Webhook received: repo:push[0m
+Data: {
+  "eventType": "repo:push",
+  "repository": "gmeandroid",
+  "workspace": "gmeremittance",
+  "push": {
+    "changes": 1
+  }
+}
+[WEBHOOK] Processing event: repo:push
+[WEBHOOK] Repository: gmeandroid
+[WEBHOOK] Workspace: gmeremittance
+[WEBHOOK] Handling push event
+[HANDLE_PUSH] Starting push handler
+[HANDLE_PUSH] Payload keys: [ 'repository', 'push' ]
+[HANDLE_PUSH] Repository: gmeandroid
+[HANDLE_PUSH] Changes count: 1
+[36m[2025-08-19T01:05:16.941Z] [INFO] Processing push event for repository: gmeandroid[0m
+Data: {
+  "repository": "gmeandroid",
+  "changes": 1
+}
+[HANDLE_PUSH] Processing change: {
+  "new": {
+    "type": "branch",
+    "name": "master",
+    "target": {
+      "type": "commit",
+      "hash": "ccb560db3fdac5df149e00f20215f7015c63a74e",
+      "message": "Test Slack notification after code review"
+    }
+  }
+}
+[HANDLE_PUSH] Change new: {
+  type: 'branch',
+  name: 'master',
+  target: {
+    type: 'commit',
+    hash: 'ccb560db3fdac5df149e00f20215f7015c63a74e',
+    message: 'Test Slack notification after code review'
+  }
+}
+[HANDLE_PUSH] Change old: undefined
+[HANDLE_PUSH] Change type: branch
+[32m[2025-08-19T01:05:17.957Z] [SUCCESS] API call to Bitbucket[0m
+Data: {
+  "service": "Bitbucket",
+  "endpoint": "getCommitComments",
+  "success": true,
+  "responseTime": "1015ms"
+}
+[36m[2025-08-19T01:05:17.958Z] [INFO] Automated review already exists for commit ccb560d[0m
+[HANDLE_PUSH] Skipping commit (review already exists): ccb560d
+[36m[2025-08-19T01:05:17.958Z] [INFO] Skipping commit with existing review: ccb560d[0m
+Data: {
+  "repository": "gmeandroid",
+  "commit": "ccb560d"
+}
+[32m[2025-08-19T01:05:17.958Z] [SUCCESS] Push event processed successfully[0m
+Data: {
+  "repository": "gmeandroid",
+  "processingTime": "1017ms"
+}
+[32m[2025-08-19T01:05:17.958Z] [SUCCESS] Webhook processed successfully in 1018ms[0m
+Data: {
+  "eventType": "repo:push"
+}
+[36m[2025-08-19T01:05:17.959Z] [INFO] Response POST /bitbucket[0m
+Data: {
+  "method": "POST",
+  "path": "/bitbucket",
+  "statusCode": 200,
+  "duration": "1020ms"
+}
+[36m[2025-08-20T01:40:47.949Z] [INFO] Cleaned up 2 expired cache entries[0m

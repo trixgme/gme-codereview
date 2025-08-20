@@ -64,3 +64,297 @@
     "responseTime": 639
   }
 }
+{
+  "timestamp": "2025-08-18T08:13:58.730Z",
+  "level": "INFO",
+  "message": "Incoming POST /webhook/bitbucket",
+  "data": {
+    "method": "POST",
+    "path": "/webhook/bitbucket",
+    "query": {},
+    "headers": {
+      "x-event-key": "repo:push",
+      "x-hook-uuid": "test-1755504838",
+      "user-agent": "curl/8.7.1"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-18T08:13:58.734Z",
+  "level": "INFO",
+  "message": "Webhook received: repo:push",
+  "data": {
+    "eventType": "repo:push",
+    "repository": "gmeandroid",
+    "workspace": "gmeremittance",
+    "push": {
+      "changes": 1
+    }
+  }
+}
+{
+  "timestamp": "2025-08-18T08:13:58.735Z",
+  "level": "SUCCESS",
+  "message": "Webhook processed successfully in 1ms",
+  "data": {
+    "eventType": "repo:push"
+  }
+}
+{
+  "timestamp": "2025-08-18T08:19:16.288Z",
+  "level": "INFO",
+  "message": "Incoming POST /webhook/bitbucket",
+  "data": {
+    "method": "POST",
+    "path": "/webhook/bitbucket",
+    "query": {},
+    "headers": {
+      "x-event-key": "repo:push",
+      "x-hook-uuid": "test-1755505156",
+      "user-agent": "curl/8.7.1"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-18T08:19:16.290Z",
+  "level": "INFO",
+  "message": "Webhook received: repo:push",
+  "data": {
+    "eventType": "repo:push",
+    "repository": "gmeandroid",
+    "workspace": "gmeremittance",
+    "push": {
+      "changes": 1
+    }
+  }
+}
+{
+  "timestamp": "2025-08-18T08:23:07.593Z",
+  "level": "INFO",
+  "message": "Incoming POST /webhook/bitbucket",
+  "data": {
+    "method": "POST",
+    "path": "/webhook/bitbucket",
+    "query": {},
+    "headers": {
+      "x-event-key": "repo:push",
+      "x-hook-uuid": "test-1755505387",
+      "user-agent": "curl/8.7.1"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-18T08:23:07.595Z",
+  "level": "INFO",
+  "message": "Webhook received: repo:push",
+  "data": {
+    "eventType": "repo:push",
+    "repository": "gmeandroid",
+    "workspace": "gmeremittance",
+    "push": {
+      "changes": 1
+    }
+  }
+}
+{
+  "timestamp": "2025-08-18T08:27:22.144Z",
+  "level": "SUCCESS",
+  "message": "Webhook processed successfully in 254549ms",
+  "data": {
+    "eventType": "repo:push"
+  }
+}
+{
+  "timestamp": "2025-08-19T01:01:53.132Z",
+  "level": "INFO",
+  "message": "Incoming POST /webhook/bitbucket",
+  "data": {
+    "method": "POST",
+    "path": "/webhook/bitbucket",
+    "query": {},
+    "headers": {
+      "x-event-key": "repo:push",
+      "x-hook-uuid": "test-slack-1755565313",
+      "user-agent": "curl/8.7.1"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-19T01:01:53.134Z",
+  "level": "INFO",
+  "message": "Webhook received: repo:push",
+  "data": {
+    "eventType": "repo:push",
+    "repository": "test-repo",
+    "workspace": "gmeremittance",
+    "push": {
+      "changes": 1
+    }
+  }
+}
+{
+  "timestamp": "2025-08-19T01:01:54.159Z",
+  "level": "ERROR",
+  "message": "Error processing webhook",
+  "data": {
+    "error": "Failed to fetch commit diff: Request failed with status code 404",
+    "stack": "Error: Failed to fetch commit diff: Request failed with status code 404\n    at BitbucketClient.getCommitDiff (/Users/seiheehan/Documents/GitHub/gme-codereview/src/utils/bitbucketClient.js:95:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async handlePush (/Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:228:22)\n    at async /Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:35:11",
+    "eventType": "repo:push",
+    "responseTime": 1025
+  }
+}
+{
+  "timestamp": "2025-08-19T01:02:13.945Z",
+  "level": "INFO",
+  "message": "Incoming POST /webhook/bitbucket",
+  "data": {
+    "method": "POST",
+    "path": "/webhook/bitbucket",
+    "query": {},
+    "headers": {
+      "x-event-key": "repo:push",
+      "x-hook-uuid": "test-slack-real-1755565333",
+      "user-agent": "curl/8.7.1"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-19T01:02:13.945Z",
+  "level": "INFO",
+  "message": "Webhook received: repo:push",
+  "data": {
+    "eventType": "repo:push",
+    "repository": "gmeandroid",
+    "workspace": "gmeremittance",
+    "push": {
+      "changes": 1
+    }
+  }
+}
+{
+  "timestamp": "2025-08-19T01:02:15.265Z",
+  "level": "SUCCESS",
+  "message": "Webhook processed successfully in 1320ms",
+  "data": {
+    "eventType": "repo:push"
+  }
+}
+{
+  "timestamp": "2025-08-19T01:03:24.614Z",
+  "level": "INFO",
+  "message": "Incoming POST /webhook/bitbucket",
+  "data": {
+    "method": "POST",
+    "path": "/webhook/bitbucket",
+    "query": {},
+    "headers": {
+      "x-event-key": "repo:push",
+      "x-hook-uuid": "test-slack-final-1755565404",
+      "user-agent": "curl/8.7.1"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-19T01:03:24.615Z",
+  "level": "INFO",
+  "message": "Webhook received: repo:push",
+  "data": {
+    "eventType": "repo:push",
+    "repository": "gmeandroid",
+    "workspace": "gmeremittance",
+    "push": {
+      "changes": 1
+    }
+  }
+}
+{
+  "timestamp": "2025-08-19T01:03:24.616Z",
+  "level": "SUCCESS",
+  "message": "Webhook processed successfully in 1ms",
+  "data": {
+    "eventType": "repo:push"
+  }
+}
+{
+  "timestamp": "2025-08-19T01:04:33.364Z",
+  "level": "INFO",
+  "message": "Incoming POST /webhook/bitbucket",
+  "data": {
+    "method": "POST",
+    "path": "/webhook/bitbucket",
+    "query": {},
+    "headers": {
+      "x-event-key": "repo:push",
+      "x-hook-uuid": "test-slack-1755565473",
+      "user-agent": "curl/8.7.1"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-19T01:04:33.365Z",
+  "level": "INFO",
+  "message": "Webhook received: repo:push",
+  "data": {
+    "eventType": "repo:push",
+    "repository": "gmeandroid",
+    "workspace": "gmeremittance",
+    "push": {
+      "changes": 1
+    }
+  }
+}
+{
+  "timestamp": "2025-08-19T01:04:34.632Z",
+  "level": "ERROR",
+  "message": "Error processing webhook",
+  "data": {
+    "error": "Failed to fetch commit diff: Request failed with status code 404",
+    "stack": "Error: Failed to fetch commit diff: Request failed with status code 404\n    at BitbucketClient.getCommitDiff (/Users/seiheehan/Documents/GitHub/gme-codereview/src/utils/bitbucketClient.js:95:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async handlePush (/Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:228:22)\n    at async /Users/seiheehan/Documents/GitHub/gme-codereview/src/routes/webhook.js:35:11",
+    "eventType": "repo:push",
+    "responseTime": 1267
+  }
+}
+{
+  "timestamp": "2025-08-19T01:05:16.939Z",
+  "level": "INFO",
+  "message": "Incoming POST /webhook/bitbucket",
+  "data": {
+    "method": "POST",
+    "path": "/webhook/bitbucket",
+    "query": {},
+    "headers": {
+      "x-event-key": "repo:push",
+      "x-hook-uuid": "test-slack-correct-1755565516",
+      "user-agent": "curl/8.7.1"
+    },
+    "ip": "::1"
+  }
+}
+{
+  "timestamp": "2025-08-19T01:05:16.940Z",
+  "level": "INFO",
+  "message": "Webhook received: repo:push",
+  "data": {
+    "eventType": "repo:push",
+    "repository": "gmeandroid",
+    "workspace": "gmeremittance",
+    "push": {
+      "changes": 1
+    }
+  }
+}
+{
+  "timestamp": "2025-08-19T01:05:17.958Z",
+  "level": "SUCCESS",
+  "message": "Webhook processed successfully in 1018ms",
+  "data": {
+    "eventType": "repo:push"
+  }
+}

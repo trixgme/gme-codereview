@@ -1,6 +1,7 @@
 const openai = require('../config/openai');
 const errorHandler = require('./errorHandler');
 const logger = require('./logger');
+const developerConfigs = require('../config/developerConfigs');
 
 class CodeReviewer {
   constructor() {
@@ -39,7 +40,7 @@ Example format for fixes:
 Be constructive, specific, and always provide actionable solutions.`;
   }
 
-  async reviewCode(diff, filePath, commitMessage) {
+  async reviewCode(diff, filePath, commitMessage, authorName = null) {
     try {
       // GPT-5 can handle up to 272,000 input tokens (~1,088,000 characters)
       // We'll use 200,000 characters to leave room for system prompt and response
@@ -56,9 +57,17 @@ Be constructive, specific, and always provide actionable solutions.`;
         });
       }
       
+      // Get developer-specific configuration
+      const devConfig = developerConfigs.getConfig(authorName);
+      const reviewLanguage = devConfig.reviewLanguage || 'en';
+      const systemPrompt = developerConfigs.getReviewPrompt(reviewLanguage);
+      
+      logger.info(`Using ${reviewLanguage} review for author: ${authorName || 'unknown'}`);
+      
       const userPrompt = `
 File: ${filePath}
 Commit Message: ${commitMessage}
+Author: ${authorName || 'unknown'}
 
 Code Diff:
 \`\`\`diff
@@ -70,7 +79,7 @@ Please review this code change.`;
       const response = await openai.chat.completions.create({
         model: 'gpt-5',
         messages: [
-          { role: 'system', content: this.systemPrompt },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
         // GPT-5 supports up to 128,000 output tokens
@@ -84,7 +93,7 @@ Please review this code change.`;
       
       if (error.status === 429) {
         return await errorHandler.retryWithBackoff(
-          () => this.reviewCode(diff, filePath, commitMessage),
+          () => this.reviewCode(diff, filePath, commitMessage, authorName),
           3,
           2000
         );
@@ -94,7 +103,7 @@ Please review this code change.`;
     }
   }
 
-  async reviewPullRequest(prData) {
+  async reviewPullRequest(prData, authorName = null) {
     try {
       const { title, description, files } = prData;
       
@@ -109,7 +118,8 @@ Please review this code change.`;
         const review = await this.reviewCode(
           file.diff,
           file.path,
-          title
+          title,
+          authorName
         );
         
         fileReviews.push({
@@ -118,9 +128,14 @@ Please review this code change.`;
         });
       }
 
+      // Get developer-specific configuration for summary
+      const devConfig = developerConfigs.getConfig(authorName);
+      const reviewLanguage = devConfig.reviewLanguage || 'en';
+      
       const summaryPrompt = `
 Pull Request: ${title}
 Description: ${description || 'No description provided'}
+Author: ${authorName || 'unknown'}
 
 Individual file reviews have been completed. Please provide:
 1. An overall assessment of the PR
@@ -130,10 +145,11 @@ Individual file reviews have been completed. Please provide:
 
 Number of files changed: ${files.length}`;
 
-      const summaryResponse = await openai.chat.completions.create({
-        model: 'gpt-5',
-        messages: [
-          { role: 'system', content: `You are a senior code reviewer providing a comprehensive PR summary.
+      const languageInstruction = reviewLanguage === 'ko'
+        ? '**IMPORTANT**: You must write your ENTIRE response in Korean (한국어). All sections, explanations, and recommendations should be in Korean.'
+        : '**IMPORTANT**: Write your response in English.';
+      
+      const summarySystemPrompt = `You are a senior code reviewer providing a comprehensive PR summary. ${languageInstruction}
           
 Provide an EXTREMELY DETAILED analysis including:
 - Complete assessment of all changes
@@ -143,7 +159,14 @@ Provide an EXTREMELY DETAILED analysis including:
 - Specific recommendations with code examples
 - Risk assessment for each component
 - Testing recommendations
-- Documentation requirements` },
+- Documentation requirements`;
+
+      const summaryResponse = await openai.chat.completions.create({
+        model: 'gpt-5',
+        messages: [
+          { role: 'system', content: summarySystemPrompt
+          
+ },
           { role: 'user', content: summaryPrompt }
         ],
         max_completion_tokens: 16000  // Allow comprehensive PR summary
@@ -158,7 +181,7 @@ Provide an EXTREMELY DETAILED analysis including:
       
       if (error.status === 429) {
         return await errorHandler.retryWithBackoff(
-          () => this.reviewPullRequest(prData),
+          () => this.reviewPullRequest(prData, authorName),
           3,
           2000
         );
