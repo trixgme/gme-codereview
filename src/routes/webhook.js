@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const codeReviewer = require('../utils/codeReviewer');
 const bitbucketClient = require('../utils/bitbucketClient');
+const developerConfigs = require('../config/developerConfigs');
 const logger = require('../utils/logger');
 const processedCommitsCache = require('../utils/processedCommitsCache');
 const slackNotifier = require('../utils/slackNotifier');
@@ -77,6 +78,7 @@ async function handlePullRequest(payload) {
     const prId = pullrequest.id;
     const prTitle = pullrequest.title;
     const prDescription = pullrequest.description || '';
+    const authorName = pullrequest.author?.display_name || pullrequest.author?.nickname || 'unknown';
 
     logger.info(`Processing PR #${prId}: ${prTitle}`, {
       repository: repoSlug,
@@ -98,7 +100,7 @@ async function handlePullRequest(payload) {
       title: prTitle,
       description: prDescription,
       files: files
-    });
+    }, authorName);
 
     let comment = `## 🤖 Automated Code Review\n\n`;
     comment += `### Overall Assessment\n${reviewResult.summary}\n\n`;
@@ -187,6 +189,12 @@ async function handlePush(payload) {
       if (change.new && (change.new.type === 'commit' || change.new.type === 'branch')) {
         const commitHash = change.new.target.hash;
         const commitMessage = change.new.target.message;
+        const authorName = change.new.target.author?.user?.display_name || 
+                          change.new.target.author?.user?.nickname || 
+                          change.new.target.author?.raw?.match(/(.*?)\s*</)?.[1] || 
+                          'unknown';
+        
+        console.log('[HANDLE_PUSH] Commit author:', authorName);
         
         // 1. 전역 캐시 확인
         if (processedCommitsCache.has(repoSlug, commitHash)) {
@@ -278,7 +286,8 @@ async function handlePush(payload) {
           const review = await codeReviewer.reviewCode(
             file.diff,
             file.path,
-            commitMessage
+            commitMessage,
+            authorName
           );
           
           const reviewTime = Date.now() - startTime;
@@ -326,6 +335,12 @@ async function handlePush(payload) {
         for (const commit of change.commits) {
           const commitHash = commit.hash;
           const commitMessage = commit.message;
+          const authorName = commit.author?.user?.display_name || 
+                            commit.author?.user?.nickname || 
+                            commit.author?.raw?.match(/(.*?)\s*</)?.[1] || 
+                            'unknown';
+          
+          console.log('[HANDLE_PUSH] Commit author (from array):', authorName);
           
           console.log('[HANDLE_PUSH] Processing commit from array:', commitHash.substring(0, 7));
           
@@ -367,7 +382,8 @@ async function handlePush(payload) {
               const review = await codeReviewer.reviewCode(
                 file.diff,
                 file.path,
-                commitMessage
+                commitMessage,
+                authorName
               );
               
               comment += `### 📄 ${file.path}\n`;

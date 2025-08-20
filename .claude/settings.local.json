@@ -16,7 +16,8 @@
       "Bash(npm test:*)",
       "Bash(pm2 logs:*)",
       "Bash(pkill:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": [],
