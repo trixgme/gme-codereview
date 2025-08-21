@@ -22,9 +22,21 @@ router.post('/bitbucket',
       logger.webhook(eventType, payload);
       logger.debug('Full webhook payload', payload);
 
+      const repoName = payload?.repository?.name;
+      const workspace = payload?.repository?.workspace?.slug;
+      
       console.log(`[WEBHOOK] Processing event: ${eventType}, UUID: ${webhookUuid}`);
-      console.log(`[WEBHOOK] Repository:`, payload?.repository?.name);
-      console.log(`[WEBHOOK] Workspace:`, payload?.repository?.workspace?.slug);
+      console.log(`[WEBHOOK] Repository: ${repoName}, Workspace: ${workspace}`);
+      
+      // gmeremittance 워크스페이스만 처리
+      if (workspace !== 'gmeremittance') {
+        console.log(`[WEBHOOK] Skipping non-gmeremittance workspace: ${workspace}`);
+        return res.status(200).json({ 
+          message: 'Only gmeremittance workspace is supported',
+          workspace: workspace,
+          repository: repoName
+        });
+      }
       
       switch (eventType) {
         case 'pullrequest:created':
@@ -258,7 +270,6 @@ async function handlePush(payload, webhookUuid, eventType) {
           console.log('[HANDLE_PUSH] Diff fetched, length:', diffText?.length || 0);
         } catch (diffError) {
           console.error('[HANDLE_PUSH] Error fetching diff:', diffError.message);
-          console.error('[HANDLE_PUSH] Workspace:', process.env.BITBUCKET_WORKSPACE);
           console.error('[HANDLE_PUSH] Repository:', repoSlug);
           throw diffError;
         }

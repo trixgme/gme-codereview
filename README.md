@@ -1,6 +1,8 @@
 # GME Code Review Bot
 
-Automated code review system for Bitbucket using OpenAI GPT-4.
+Automated code review system for GME Remittance Bitbucket workspace using OpenAI GPT-4.
+
+> **Note**: This system is specifically configured for the `gmeremittance` workspace only.
 
 ## Features
 
@@ -19,8 +21,8 @@ Create a `.env` file with:
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key
 
-# Bitbucket Configuration  
-BITBUCKET_WORKSPACE=your_workspace
+# Bitbucket Configuration (GME Remittance)
+BITBUCKET_WORKSPACE=gmeremittance
 BITBUCKET_USERNAME=your_username
 BITBUCKET_APP_PASSWORD=your_app_password
 
