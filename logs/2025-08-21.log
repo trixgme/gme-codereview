@@ -1,0 +1,95 @@
+{
+  "timestamp": "2025-08-21T01:43:42.469Z",
+  "level": "DEBUG",
+  "message": "Webhook processing marked: webhook-uuid-12345:repo:push:test-repo:abc123def456ghi789"
+}
+{
+  "timestamp": "2025-08-21T01:43:42.475Z",
+  "level": "DEBUG",
+  "message": "Started processing: test-repo:def456ghi789abc123"
+}
+{
+  "timestamp": "2025-08-21T01:43:42.476Z",
+  "level": "DEBUG",
+  "message": "Processing completed and cached: test-repo:def456ghi789abc123"
+}
+{
+  "timestamp": "2025-08-21T01:43:42.476Z",
+  "level": "DEBUG",
+  "message": "Started processing: test-repo:ghi789abc123def456"
+}
+{
+  "timestamp": "2025-08-21T01:43:42.476Z",
+  "level": "DEBUG",
+  "message": "Removed from cache: test-repo:ghi789abc123def456"
+}
+{
+  "timestamp": "2025-08-21T01:43:42.476Z",
+  "level": "DEBUG",
+  "message": "Started processing: test-repo:ghi789abc123def456"
+}
+{
+  "timestamp": "2025-08-21T01:43:42.476Z",
+  "level": "DEBUG",
+  "message": "Started processing: test-repo:concurrent-test-commit"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.870Z",
+  "level": "DEBUG",
+  "message": "Webhook processing marked: webhook-uuid-12345:repo:push:test-repo:abc123def456ghi789"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.871Z",
+  "level": "WARNING",
+  "message": "Duplicate webhook request blocked: webhook-uuid-12345:repo:push:test-repo:abc123def456ghi789"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.872Z",
+  "level": "DEBUG",
+  "message": "Started processing: test-repo:def456ghi789abc123"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.872Z",
+  "level": "WARNING",
+  "message": "Duplicate processing attempt blocked: test-repo:def456ghi789abc123"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.873Z",
+  "level": "DEBUG",
+  "message": "Processing completed and cached: test-repo:def456ghi789abc123"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.873Z",
+  "level": "WARNING",
+  "message": "Duplicate processing attempt blocked: test-repo:def456ghi789abc123"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.873Z",
+  "level": "DEBUG",
+  "message": "Started processing: test-repo:ghi789abc123def456"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.873Z",
+  "level": "DEBUG",
+  "message": "Removed from cache: test-repo:ghi789abc123def456"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.874Z",
+  "level": "DEBUG",
+  "message": "Started processing: test-repo:ghi789abc123def456"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.874Z",
+  "level": "DEBUG",
+  "message": "Started processing: test-repo:concurrent-test-commit"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.874Z",
+  "level": "WARNING",
+  "message": "Duplicate processing attempt blocked: test-repo:concurrent-test-commit"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.874Z",
+  "level": "INFO",
+  "message": "ProcessedCommitsCache cleared (commits, processing, webhooks)"
+}

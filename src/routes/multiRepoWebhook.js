@@ -14,11 +14,12 @@ router.post(['/bitbucket', '/bitbucket/:workspace'], async (req, res) => {
   
   try {
     const eventType = req.headers['x-event-key'];
+    const webhookUuid = req.headers['x-hook-uuid'];
     const payload = req.body;
     const workspace = req.params.workspace || payload?.repository?.workspace?.slug;
     const repoName = payload?.repository?.name;
     
-    console.log(`[WEBHOOK] Event: ${eventType}, Workspace: ${workspace}, Repo: ${repoName}`);
+    console.log(`[WEBHOOK] Event: ${eventType}, UUID: ${webhookUuid}, Workspace: ${workspace}, Repo: ${repoName}`);
     
     // Check if review is enabled for this repository
     if (!repositoryConfigs.isReviewEnabled(repoName)) {
@@ -41,7 +42,7 @@ router.post(['/bitbucket', '/bitbucket/:workspace'], async (req, res) => {
         break;
         
       case 'repo:push':
-        await handlePushWithConfig(payload, repoConfig);
+        await handlePushWithConfig(payload, repoConfig, webhookUuid, eventType);
         break;
         
       default:
@@ -148,11 +149,12 @@ async function handlePullRequestWithConfig(payload, config) {
   }
 }
 
-async function handlePushWithConfig(payload, config) {
+async function handlePushWithConfig(payload, config, webhookUuid, eventType) {
   const { push, repository } = payload;
   const repoSlug = repository.name;
   
   console.log(`[PUSH] Processing push for ${repoSlug} with config:`, config);
+  console.log(`[PUSH] Webhook UUID: ${webhookUuid}, Event: ${eventType}`);
   console.log(`[PUSH] Number of changes in push:`, push?.changes?.length || 0);
   
   if (!push?.changes || push.changes.length === 0) {
@@ -171,6 +173,15 @@ async function handlePushWithConfig(payload, config) {
                         'unknown';
       
       console.log(`[PUSH] Processing change for commit: ${commitHash.substring(0, 7)} by ${authorName}`);
+      
+      // 0. 웹훅 UUID 기반 중복 체크 (최우선)
+      if (processedCommitsCache.isWebhookProcessed(webhookUuid, eventType, repoSlug, commitHash)) {
+        console.log(`[PUSH] Skipping duplicate webhook: ${commitHash.substring(0, 7)}`);
+        continue;
+      }
+      
+      // 웹훅 처리 시작 표시
+      processedCommitsCache.markWebhookProcessed(webhookUuid, eventType, repoSlug, commitHash);
       
       // 이번 푸시에서 이미 처리한 커밋인지 확인
       if (processedInThisPush.has(commitHash)) {
@@ -225,7 +236,7 @@ async function handlePushWithConfig(payload, config) {
         
         if (filesToReview.length === 0) {
           console.log('[PUSH] No files to review after filtering');
-          logger.warn('All files filtered out', {
+          logger.warning('All files filtered out', {
             repository: repoSlug,
             commit: commitHash.substring(0, 7),
             totalFiles: files.length,

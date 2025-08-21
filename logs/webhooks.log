@@ -358,3 +358,23 @@
     "eventType": "repo:push"
   }
 }
+{
+  "timestamp": "2025-08-21T01:43:42.469Z",
+  "level": "DEBUG",
+  "message": "Webhook processing marked: webhook-uuid-12345:repo:push:test-repo:abc123def456ghi789"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.870Z",
+  "level": "DEBUG",
+  "message": "Webhook processing marked: webhook-uuid-12345:repo:push:test-repo:abc123def456ghi789"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.871Z",
+  "level": "WARNING",
+  "message": "Duplicate webhook request blocked: webhook-uuid-12345:repo:push:test-repo:abc123def456ghi789"
+}
+{
+  "timestamp": "2025-08-21T01:44:27.874Z",
+  "level": "INFO",
+  "message": "ProcessedCommitsCache cleared (commits, processing, webhooks)"
+}

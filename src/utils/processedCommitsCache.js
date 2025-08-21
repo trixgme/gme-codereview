@@ -6,8 +6,12 @@ class ProcessedCommitsCache {
     this.cache = new Map();
     // 처리 중인 커밋을 추적 (동시 요청 방지)
     this.processing = new Map();
+    // 웹훅 UUID 기반 중복 방지 (1시간 TTL)
+    this.webhookCache = new Map();
     // 24시간 후 자동 삭제 (밀리초)
     this.TTL = 24 * 60 * 60 * 1000;
+    // 웹훅 캐시 TTL (1시간)
+    this.WEBHOOK_TTL = 60 * 60 * 1000;
     // 1시간마다 만료된 항목 정리
     this.cleanupInterval = 60 * 60 * 1000;
     
@@ -61,7 +65,7 @@ class ProcessedCommitsCache {
     
     // 이미 처리 중이거나 완료된 경우
     if (this.processing.has(key) || this.has(repoSlug, commitHash)) {
-      logger.warn(`Duplicate processing attempt blocked: ${key}`);
+      logger.warning(`Duplicate processing attempt blocked: ${key}`);
       return false;
     }
     
@@ -91,6 +95,56 @@ class ProcessedCommitsCache {
   }
 
   /**
+   * 웹훅 UUID 기반 중복 체크
+   * @param {string} webhookUuid - 웹훅 UUID (x-hook-uuid 헤더)
+   * @param {string} eventKey - 이벤트 키 (x-event-key 헤더)
+   * @param {string} repoSlug - 저장소 이름
+   * @param {string} commitHash - 커밋 해시
+   * @returns {boolean} 이미 처리된 웹훅이면 true
+   */
+  isWebhookProcessed(webhookUuid, eventKey, repoSlug, commitHash) {
+    if (!webhookUuid) return false;
+    
+    const webhookKey = `${webhookUuid}:${eventKey}:${repoSlug}:${commitHash}`;
+    const entry = this.webhookCache.get(webhookKey);
+    
+    if (!entry) {
+      return false;
+    }
+    
+    // 만료 시간 확인
+    if (Date.now() - entry.timestamp > this.WEBHOOK_TTL) {
+      this.webhookCache.delete(webhookKey);
+      logger.debug(`Expired webhook cache entry removed: ${webhookKey}`);
+      return false;
+    }
+    
+    logger.warning(`Duplicate webhook request blocked: ${webhookKey}`);
+    return true;
+  }
+
+  /**
+   * 웹훅 처리 기록 추가
+   * @param {string} webhookUuid - 웹훅 UUID
+   * @param {string} eventKey - 이벤트 키
+   * @param {string} repoSlug - 저장소 이름
+   * @param {string} commitHash - 커밋 해시
+   */
+  markWebhookProcessed(webhookUuid, eventKey, repoSlug, commitHash) {
+    if (!webhookUuid) return;
+    
+    const webhookKey = `${webhookUuid}:${eventKey}:${repoSlug}:${commitHash}`;
+    this.webhookCache.set(webhookKey, {
+      timestamp: Date.now(),
+      webhookUuid,
+      eventKey,
+      repoSlug,
+      commitHash
+    });
+    logger.debug(`Webhook processing marked: ${webhookKey}`);
+  }
+
+  /**
    * 처리된 커밋 추가 (레거시 호환성)
    * @param {string} repoSlug - 저장소 이름
    * @param {string} commitHash - 커밋 해시
@@ -116,17 +170,32 @@ class ProcessedCommitsCache {
    */
   cleanup() {
     const now = Date.now();
-    let removed = 0;
+    let removedCommits = 0;
+    let removedWebhooks = 0;
     
+    // 커밋 캐시 정리
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > this.TTL) {
         this.cache.delete(key);
-        removed++;
+        removedCommits++;
       }
     }
     
-    if (removed > 0) {
-      logger.info(`Cleaned up ${removed} expired cache entries`);
+    // 웹훅 캐시 정리
+    for (const [key, entry] of this.webhookCache.entries()) {
+      if (now - entry.timestamp > this.WEBHOOK_TTL) {
+        this.webhookCache.delete(key);
+        removedWebhooks++;
+      }
+    }
+    
+    if (removedCommits > 0 || removedWebhooks > 0) {
+      logger.info(`Cache cleanup completed`, {
+        expiredCommits: removedCommits,
+        expiredWebhooks: removedWebhooks,
+        remainingCommits: this.cache.size,
+        remainingWebhooks: this.webhookCache.size
+      });
     }
   }
 
@@ -154,11 +223,21 @@ class ProcessedCommitsCache {
    */
   getStats() {
     return {
-      size: this.cache.size,
-      entries: Array.from(this.cache.entries()).map(([key, entry]) => ({
-        key,
-        age: Math.floor((Date.now() - entry.timestamp) / 1000 / 60) + ' minutes'
-      }))
+      commits: {
+        size: this.cache.size,
+        processing: this.processing.size,
+        entries: Array.from(this.cache.entries()).map(([key, entry]) => ({
+          key,
+          age: Math.floor((Date.now() - entry.timestamp) / 1000 / 60) + ' minutes'
+        }))
+      },
+      webhooks: {
+        size: this.webhookCache.size,
+        entries: Array.from(this.webhookCache.entries()).map(([key, entry]) => ({
+          key,
+          age: Math.floor((Date.now() - entry.timestamp) / 1000 / 60) + ' minutes'
+        }))
+      }
     };
   }
 
@@ -167,7 +246,9 @@ class ProcessedCommitsCache {
    */
   clear() {
     this.cache.clear();
-    logger.info('ProcessedCommitsCache cleared');
+    this.processing.clear();
+    this.webhookCache.clear();
+    logger.info('ProcessedCommitsCache cleared (commits, processing, webhooks)');
   }
 }
 

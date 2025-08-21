@@ -17,11 +17,12 @@ router.post('/bitbucket',
     
     try {
       const { eventType, payload } = req.webhookData;
+      const webhookUuid = req.headers['x-hook-uuid'];
       
       logger.webhook(eventType, payload);
       logger.debug('Full webhook payload', payload);
 
-      console.log(`[WEBHOOK] Processing event: ${eventType}`);
+      console.log(`[WEBHOOK] Processing event: ${eventType}, UUID: ${webhookUuid}`);
       console.log(`[WEBHOOK] Repository:`, payload?.repository?.name);
       console.log(`[WEBHOOK] Workspace:`, payload?.repository?.workspace?.slug);
       
@@ -34,7 +35,7 @@ router.post('/bitbucket',
         
         case 'repo:push':
           console.log('[WEBHOOK] Handling push event');
-          await handlePush(payload);
+          await handlePush(payload, webhookUuid, eventType);
           break;
         
         default:
@@ -148,11 +149,12 @@ async function handlePullRequest(payload) {
   }
 }
 
-async function handlePush(payload) {
+async function handlePush(payload, webhookUuid, eventType) {
   const startTime = Date.now();
   
   try {
     console.log('[HANDLE_PUSH] Starting push handler');
+    console.log(`[HANDLE_PUSH] Webhook UUID: ${webhookUuid}, Event: ${eventType}`);
     console.log('[HANDLE_PUSH] Payload keys:', Object.keys(payload));
     
     const { push, repository } = payload;
@@ -201,6 +203,15 @@ async function handlePush(payload) {
                           'unknown';
         
         console.log('[HANDLE_PUSH] Processing commit:', commitHash.substring(0, 7), 'by', authorName);
+        
+        // 0. 웹훅 UUID 기반 중복 체크 (최우선)
+        if (processedCommitsCache.isWebhookProcessed(webhookUuid, eventType, repoSlug, commitHash)) {
+          console.log(`[HANDLE_PUSH] Skipping duplicate webhook: ${commitHash.substring(0, 7)}`);
+          continue;
+        }
+        
+        // 웹훅 처리 시작 표시
+        processedCommitsCache.markWebhookProcessed(webhookUuid, eventType, repoSlug, commitHash);
         
         // 이번 푸시에서 이미 처리한 커밋인지 확인
         if (processedInThisPush.has(commitHash)) {
@@ -385,6 +396,15 @@ async function handlePush(payload) {
                             'unknown';
           
           console.log('[HANDLE_PUSH] Processing commit from array:', commitHash.substring(0, 7), 'by', authorName);
+          
+          // 0. 웹훅 UUID 기반 중복 체크 (최우선)
+          if (processedCommitsCache.isWebhookProcessed(webhookUuid, eventType, repoSlug, commitHash)) {
+            console.log(`[HANDLE_PUSH] Skipping duplicate webhook: ${commitHash.substring(0, 7)}`);
+            continue;
+          }
+          
+          // 웹훅 처리 시작 표시
+          processedCommitsCache.markWebhookProcessed(webhookUuid, eventType, repoSlug, commitHash);
           
           // 이번 푸시에서 이미 처리한 커밋인지 확인
           if (processedInThisPush.has(commitHash)) {
